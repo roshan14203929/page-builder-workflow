@@ -1,0 +1,7 @@
+interface:
+  display_name: "Build Figma Page"
+  short_description: "Build and verify local HTML/CSS from Figma"
+  default_prompt: "Use $build-figma-page to turn a Figma frame into verified local HTML and CSS."
+
+policy:
+  allow_implicit_invocation: true

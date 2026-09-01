@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layerlift QA check",
+  "type": "object",
+  "required": ["kind", "status", "checkedAt", "summary", "findings"],
+  "properties": {
+    "kind": { "enum": ["content", "ui", "accessibility", "technical"] },
+    "runId": { "type": "string", "pattern": "^run-[0-9]{3,}$" },
+    "candidateId": { "type": "string", "pattern": "^candidate-[0-9]{3,}$" },
+    "status": { "enum": ["PASS", "FAIL", "UNAVAILABLE"] },
+    "summary": { "type": "string" },
+    "webInterfaceGuidelines": {
+      "type": "object",
+      "required": ["sourceUrl", "fetchStatus", "revision", "sha256"],
+      "properties": {
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "fetchStatus": { "enum": ["FETCHED", "FAILED"] },
+        "revision": { "type": ["string", "null"] },
+        "sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "fetchStatus": { "const": "FETCHED" } } },
+          "then": { "properties": { "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
+          "else": { "properties": { "sha256": { "type": "null" } } }
+        }
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "message"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "enum": ["critical", "high", "medium", "low"] },
+          "message": { "type": "string" },
+          "section": { "type": ["string", "null"] },
+          "evidence": { "type": ["string", "null"] },
+          "suggestedFix": { "type": ["string", "null"] }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "kind": { "enum": ["ui", "accessibility"] } },
+        "required": ["kind"]
+      },
+      "then": { "required": ["webInterfaceGuidelines"] }
+    }
+  ]
+}

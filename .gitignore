@@ -1,0 +1,26 @@
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+.claude/state/*.json
+.claude/state/*.jsonl
+projects/*
+!projects/_template/
+!projects/_template/**
+
+# Generated QA report output — ticket folders only; root-level templates stay tracked
+qa-reports/*/
+
+*.log
+
+# Local MCP server config (machine-specific paths / tokens)
+.mcp.json
+
+# Env
+.env
+.env.*

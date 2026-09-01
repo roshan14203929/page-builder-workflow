@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "items": [
+    { "id": "hero-title", "kind": "heading", "text": "Exact source heading", "required": true, "nodeId": "1:4", "sectionId": "hero" }
+  ]
+}
+

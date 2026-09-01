@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-render/desktop.png --width 988 --height 14873 --full-page false)",
+      "Bash(tee /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/desktop-render.json)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop.png --width 988 --height 800)",
+      "Bash(cp /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/runs/run-002/candidates/candidate-001/assets/* /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002/assets/ && echo \"All assets copied\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile.png --width 375 --height 800)",
+      "Bash(python scripts/visual-diff.py --reference /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/sources/source-002/reference/desktop.png --candidate /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop.png --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-diff.json)",
+      "Bash(python scripts/visual-diff.py --reference /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/sources/source-002/reference/mobile.png --candidate /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile.png --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile-diff.json)",
+      "Bash(python scripts/measure-footer.py --root /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --width 988)",
+      "Bash(python scripts/measure-footer.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --width 988)",
+      "Bash(python scripts/measure-footer.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --width 375)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v2.png --width 988 --height 800)",
+      "Bash(python3 -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f'scrollHeight: {d[\\\\\"diagnostics\\\\\"][\\\\\"scrollHeight\\\\\"]}'\\)\")",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v3.png --width 988 --height 800)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v4.png --width 988 --height 800)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v5.png --width 988 --height 800)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile-v2.png --width 375 --height 800)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile-v3.png --width 375 --height 800)",
+      "Bash(python scripts/visual-diff.py --reference /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/sources/source-002/reference/desktop.png --candidate /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v5.png --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-diff-v2.json)",
+      "Bash(python scripts/visual-diff.py --reference /Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/sources/source-002/reference/mobile.png --candidate /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile-v3.png --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-mobile-diff-v2.json)",
+      "Bash(python scripts/render-page.py --root projects/fsn-hes/pages/home/runs/run-003/candidates/candidate-002 --output /private/tmp/claude-501/-Users-roshanmoolya-Documents-mediChannel/bb1c8b56-3bda-4a6e-861e-e92e7aae1813/scratchpad/candidate-002-desktop-v6.png --width 988 --height 800)"
+    ],
+    "additionalDirectories": [
+      "/Users/roshanmoolya/Documents/mediChannel/projects/fsn-hes/pages/home/runs/run-002/candidates/candidate-001/assets"
+    ]
+  },
+  "hooks": {
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/log-agent-event.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

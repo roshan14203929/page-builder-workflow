@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Incremental Figma source patch",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "sourceId": { "type": "string", "pattern": "^source-[0-9]{3,}$" },
+    "sections": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "object", "required": ["id"] },
+          {
+            "type": "object",
+            "required": ["section"],
+            "properties": {
+              "section": { "type": "object", "required": ["id"] },
+              "insertBefore": { "type": "string" },
+              "insertAfter": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "removeSectionIds": { "type": "array", "items": { "type": "string" } },
+    "replaceContentForSections": { "type": "array", "items": { "type": "string" } },
+    "contentItems": { "type": "array", "items": { "type": "object", "required": ["id", "sectionId", "nodeId", "text"] } },
+    "removeContentItemIds": { "type": "array", "items": { "type": "string" } },
+    "specAssets": { "type": "array", "items": { "type": "object", "required": ["id"] } },
+    "manifestAssets": { "type": "array", "items": { "type": "object", "required": ["id"] } },
+    "removeAssetIds": { "type": "array", "items": { "type": "string" } },
+    "tokens": { "type": "object" },
+    "variants": { "type": "array", "items": { "type": "object" } },
+    "refreshedVariants": { "type": "array", "items": { "type": "string" } },
+    "files": {
+      "type": "object",
+      "properties": {
+        "assets": { "$ref": "#/$defs/files" },
+        "references": { "$ref": "#/$defs/files" },
+        "raw": { "$ref": "#/$defs/files" }
+      }
+    },
+    "calls": { "type": "array", "items": { "type": "object" } }
+  },
+  "$defs": {
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        }
+      }
+    }
+  }
+}

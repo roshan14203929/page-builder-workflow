@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codemap"
+  short_description: "Map workspace modules and dependencies"
+  default_prompt: "Use $codemap to build or refresh an agent-readable map of this workspace."
+
+policy:
+  allow_implicit_invocation: true
+

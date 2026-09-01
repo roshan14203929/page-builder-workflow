@@ -1,0 +1,13 @@
+{
+  "kind": "ui",
+  "status": "PASS",
+  "checkedAt": "2026-01-01T00:00:00.000Z",
+  "summary": "The accepted candidate matches the supplied variants and interaction requirements.",
+  "webInterfaceGuidelines": {
+    "sourceUrl": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md",
+    "fetchStatus": "FETCHED",
+    "revision": null,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "findings": []
+}

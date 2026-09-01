@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layerlift conversion run",
+  "type": "object",
+  "required": ["id", "status", "sourceId", "startedAt", "completedAt", "repair", "candidates", "events"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^run-[0-9]{3,}$" },
+    "status": {
+      "enum": ["CREATED", "BUILDING", "VERIFYING", "REFINING", "COMPLETED", "NEEDS_REVIEW", "FAILED"]
+    },
+    "sourceExtractionMode": { "enum": ["FULL", "INCREMENTAL"] },
+    "baseSourceId": { "type": ["string", "null"] },
+    "repair": {
+      "type": "object",
+      "required": ["round", "maxRounds"],
+      "properties": {
+        "round": { "type": "integer", "minimum": 0 },
+        "maxRounds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "candidates": { "type": "array" },
+    "events": { "type": "array" }
+  }
+}

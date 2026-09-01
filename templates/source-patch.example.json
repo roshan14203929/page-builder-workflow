@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "sourceId": "source-002",
+  "sections": [
+    {
+      "id": "safety",
+      "role": "content",
+      "sourceNodeIds": ["8099:10395"],
+      "bounds": {},
+      "textItemIds": ["safety-heading"],
+      "assetIds": [],
+      "layout": {},
+      "visual": {}
+    }
+  ],
+  "replaceContentForSections": ["safety"],
+  "contentItems": [
+    {
+      "id": "safety-heading",
+      "kind": "heading",
+      "text": "Safety",
+      "required": true,
+      "nodeId": "8099:10396",
+      "sectionId": "safety"
+    }
+  ],
+  "specAssets": [],
+  "manifestAssets": [],
+  "refreshedVariants": ["mobile"],
+  "files": {
+    "assets": [],
+    "references": [
+      { "from": "reference/mobile.png", "to": "mobile.png" }
+    ],
+    "raw": [
+      { "from": "raw/changed-node.json", "to": "changed-node-8099-10395.json" }
+    ]
+  },
+  "calls": [
+    {
+      "operation": "get-design-context",
+      "nodeId": "8099:10395",
+      "status": "SUCCESS"
+    }
+  ]
+}

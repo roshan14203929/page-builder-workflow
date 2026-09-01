@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+KIT = ROOT / "scripts" / "kit.py"
+
+
+def run_kit(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        [sys.executable, str(KIT), *args],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if check and result.returncode != 0:
+        raise AssertionError(result.stderr or result.stdout)
+    return result
+
+
+def kit(*args: str) -> dict[str, object]:
+    return json.loads(run_kit(*args).stdout)
+
+
+@pytest.fixture
+def project_factory():
+    project_ids: list[str] = []
+
+    def create(project_id: str) -> Path:
+        project_ids.append(project_id)
+        return ROOT / "projects" / project_id
+
+    yield create
+
+    for project_id in project_ids:
+        shutil.rmtree(ROOT / "projects" / project_id, ignore_errors=True)

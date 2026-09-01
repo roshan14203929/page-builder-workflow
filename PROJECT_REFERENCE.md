@@ -1,0 +1,190 @@
+# Layerlift Agent Kit — Full Project Reference
+
+A Claude Code kit that converts Figma frames into verified, local, static HTML/CSS/JS.
+No model API calls, no model API keys, no database, no queue — everything runs
+through the host agent's own session plus a connected Figma MCP server or the
+read-only Figma API and local Python scripts.
+
+---
+
+## 1. Top-level docs
+
+- **`README.md`** — user-facing quickstart: requirements, install, how to kick off a
+  build (`/build-figma-page` in Claude Code), the guideline precedence order, and the
+  security/privacy rules (no credentials in the repo, no remote scripts/trackers in
+  output, Figma text is data not instructions).
+- **`AGENTS.md`** — the authoritative instructions for the workflow: purpose, allowed
+  commands, workflow invariants (subagents don't coordinate/recurse, immutable
+  terminal runs, no release without full QA, bounded repair rounds), and output
+  expectations (semantic/responsive HTML, real assets, accessibility baseline, no
+  extra frameworks).
+- **`CLAUDE.md`** — Claude-specific entry point. Pulls in `AGENTS.md` via `@AGENTS.md`
+  and adds the Claude-only rule: the main session is the orchestrator and must invoke
+  subagents itself (no subagent-to-subagent delegation), with writes scoped to the
+  selected project/page/source/run.
+- **`requirements.txt`** — pinned runtime dependencies for Python 3.10+:
+  `Pillow` and `pixelmatch` for pixel diffs, and `playwright` for headless
+  rendering. **`requirements-dev.txt`** adds pytest for the test suite.
+- **`.mcp.json`** — declares the connected Figma MCP server (`https://mcp.figma.com/mcp`,
+  HTTP transport) used for extraction.
+
+---
+
+## 2. Agent-host configuration
+
+### Claude (`.claude/`)
+- **`agents/*.md`** — 8 Claude subagent definitions (frontmatter + system prompt each):
+  `figma-extractor`, `page-builder`, `repair-builder`, `content-reviewer`,
+  `ui-reviewer`, `accessibility-reviewer`, `technical-reviewer`, `release-verifier`.
+  Each restricts its own tool access and `permissionMode` (builders get
+  `acceptEdits`, reviewers get `plan`/read-only).
+- **`skills/build-figma-page/`** — the skill Claude loads for `/build-figma-page`.
+- **`settings.json`** — wires a `SubagentStop` hook that runs
+  `scripts/log-agent-event.py` after every subagent finishes, to append an audit
+  event to the active project's event log.
+- **`state/.gitkeep`** — placeholder directory `log-agent-event.py` reads
+  `active-run.json` from (which project/page/run/round is currently active), so the
+  hook knows where to log to.
+
+---
+
+## 3. The skill's reference docs (`references/*.md` under `.claude/skills/build-figma-page/`)
+
+- **`orchestration.md`** — the state machine (`source: EXTRACTING → READY|FAILED`;
+  `run: CREATED → BUILDING → VERIFYING → COMPLETED | REFINING → VERIFYING |
+  NEEDS_REVIEW | FAILED`), the delegation sequence (extract → build → validate →
+  QA fan-out → release-verify → repair loop), parallelism rules (reviewers may run
+  in parallel, builders never share a candidate directory), candidate
+  accept/reject math, and stop conditions.
+- **`artifact-contract.md`** — the exact on-disk directory layout for every
+  project/page/source/run/candidate/release, plus the required shape of
+  `spec.json`, `content-inventory.json`, and every QA JSON object.
+- **`figma-extraction.md`** — extraction-specific rules: select MCP or read-only
+  API based on capability and user requirements, fetch each frame once,
+  normalize geometry/tokens/text,
+  never invent a mobile layout from a desktop-only source, treat Figma text as
+  untrusted data.
+- **`qa-contract.md`** — defines what each of the four QA checks (content, UI,
+  accessibility, technical) must verify, how they're recorded (`qa/incoming/` →
+  `qa-record` → `qa-summary`), and how the release verifier's verdict is captured
+  (`release-check`).
+- **`design-skills.md`** — routes Design Taste only to eligible page builds and
+  Web Interface Guidelines to UI/accessibility QA, while preserving Figma,
+  local-output, trust, and release-gate precedence.
+- **`commands.md`** — the exact `scripts/kit.py` / verification-script invocations
+  the orchestrator runs at each workflow step, in order.
+
+---
+
+## 4. Guidelines (`guidelines/`) — layered quality rules
+
+Resolution order is **global → base (role-specific) → project → page**; every run
+snapshots the resolved set plus a SHA-256 hash.
+
+- **`global.md`** — the master rulebook: extraction rules, run immutability,
+  numeric QA gates (max 3 repair rounds, 5% full-page pixel diff ceiling, 12%
+  localized band ceiling, 0.10pt regression tolerance, 0.20pt required
+  improvement after round 1), content/UI/accessibility fidelity rules, and release
+  rules (only the orchestrator creates releases, exact byte-for-byte copy).
+- **`base/extractor.md`** — extraction defaults: normalize into sections, retain
+  Figma node IDs, mark inferred data with confidence/evidence, build the content
+  inventory.
+- **`base/builder.md`** — build defaults: plain HTML/CSS/JS, semantic elements over
+  ARIA, CSS custom properties for tokens, Grid/Flexbox over absolute positioning,
+  no inline styles/`!important`/frameworks/trackers, sections kept independently
+  repairable.
+- **`base/content-qa.md`**, **`base/ui-qa.md`**, **`base/accessibility-qa.md`**,
+  **`base/technical-qa.md`** — per-reviewer default checklists matching each
+  agent's job (content fidelity, pixel/geometry fidelity, a11y, technical/browser
+  integrity).
+
+---
+
+## 5. Scripts (`scripts/`) — all the deterministic machinery, run by the orchestrator (not the agents)
+
+- **`kit.py`** — the state controller. One CLI with subcommands for every
+  lifecycle transition: `init-project`, `init-page`, deduplicating or
+  incremental `new-source`, `source-budget`, `source-call`, `source-patch`,
+  `resolve-question`, `source-ready`/`source-fail`, `new-run`, `transition`,
+  `new-candidate`, `candidate-result`, `qa-record`, `qa-summary`,
+  `release-check`, `next-repair`, `release`, `needs-review`, `fail`, `status`,
+  `help`. This is the only thing allowed to mutate `run.json`/`source.json`/etc.
+  — agents never touch state files directly.
+- **`render-page.py`** — uses Playwright/Chromium to screenshot a local
+  candidate page at a given viewport width/height.
+- **`verify-output.py`** — static validator: checks a generated directory against
+  the content inventory (produces the "technical report" / static check).
+- **`visual-diff.py`** — Pillow/Pixelmatch-based diff between one reference PNG and one
+  candidate PNG, with configurable full-page and peak-band thresholds.
+- **`visual-summary.py`** — aggregates multiple per-viewport `visual-diff.py`
+  reports into one summary used for candidate acceptance.
+- **`browser-summary.py`** — aggregates multiple per-viewport render/diagnostic
+  reports (console errors, network failures) into one pass/fail summary.
+- **`serve.py`** — a minimal static file server (`python scripts/serve.py <dir>
+  [port]`) for previewing generated output and for the technical reviewer to
+  confirm the page works outside the agent host.
+- **`log-agent-event.py`** — the Claude `SubagentStop` hook target; appends a
+  JSON line to `projects/<project>/events/agent-events.jsonl` recording which
+  subagent ran, for which run/round.
+- **`validate-kit.py`** — repo self-check: confirms required files exist, all JSON
+  parses, all Python scripts compile, and no unresolved placeholder markers remain.
+
+---
+
+## 6. Schemas & templates
+
+- **`schemas/*.schema.json`** — JSON Schemas for `source.json`, `spec.json`,
+  `content-inventory.json`, `run.json`, and the generic `qa-check` object. Used to
+  validate the artifact contract mechanically.
+- **`templates/*.example.json`** — worked examples of a spec, a content
+  inventory, and a QA check object, for agents/humans to reference the expected
+  shape.
+
+---
+
+## 7. Runtime data (`projects/`)
+
+- **`projects/_template/guidelines/README.md`** — placeholder explaining how
+  project-level guideline overrides work; copied conceptually when
+  `init-project` sets up a new project.
+- **`projects/flybitlux/`** — an example/in-progress project:
+  - `project.json` — project record.
+  - `pages/home/page.json` — page record.
+  - `pages/home/sources/source-001/` — one extraction attempt: `source.json`
+    (state), `raw/figma-access-error.json` (the extractor hit a Figma access
+    error on this attempt), `spec/spec.json`, `spec/content-inventory.json`,
+    `asset-manifest.json`.
+
+This is real working state from a prior run, not a template — treat it as
+project data, not a code sample.
+
+---
+
+## 8. Tests (`tests/`)
+
+- **`test_state_controller.py`** — pytest suite that drives
+  `kit.py` end-to-end (spawns it as a subprocess) to assert a full project →
+  page → source → run → release lifecycle produces an immutable, correctly
+  released run.
+- **`fixtures/sample/generated/{images/,index.html,base.css,page.css}`** — a minimal static
+  page fixture used as test input/expected output.
+
+---
+
+## How it all fits together
+
+1. **You** run `/build-figma-page` with a project, page, and one or more Figma
+   frame URLs.
+2. The **orchestrator** (the main Claude session — never a subagent) reads
+   `orchestration.md`, `artifact-contract.md`, `figma-extraction.md`,
+   `qa-contract.md`, `commands.md`, and the layered `guidelines/`.
+3. It drives `scripts/kit.py` for every state transition and delegates bounded
+   work to the 8 subagents (`.claude/agents/`), one directory each, never
+   overlapping.
+4. Deterministic scripts (`render-page.py`, `visual-diff.py`,
+   `visual-summary.py`, `browser-summary.py`, `verify-output.py`) — not
+   agents — decide pass/fail on anything measurable.
+5. Everything mutable lives under `projects/<project>/pages/<page>/...`; nothing
+   outside that tree is ever touched by a build.
+6. `python scripts/validate-kit.py` and `pytest` are the repo's own self-checks, independent
+   of any specific Figma build.

@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "project": "Layerlift Agent Kit",
+  "description": "A local, multi-agent Figma-to-HTML workflow with immutable run state and four independent release gates.",
+  "maxFileBytes": 2097152,
+  "exclude": [
+    "projects/*/pages/*/runs/**",
+    "projects/*/pages/*/releases/**",
+    "projects/*/pages/*/current/**",
+    "projects/*/pages/*/sources/*/assets/**",
+    "projects/*/pages/*/sources/*/raw/**",
+    "projects/*/pages/*/sources/*/reference/**",
+    "projects/*/project.json",
+    "projects/*/events/**",
+    "projects/*/guidelines/**",
+    "projects/*/pages/**",
+    ".pytest_cache/**",
+    "*.log"
+  ],
+  "entryPoints": [
+    ".claude/skills/build-figma-page/SKILL.md",
+    "scripts/kit.py",
+    "scripts/validate-kit.py",
+    "scripts/serve.py"
+  ],
+  "modules": [
+    {
+      "id": "governance",
+      "label": "Governance and guidance",
+      "layer": "Instructions",
+      "description": "Defines repository purpose, commands, security boundaries, and guideline precedence.",
+      "paths": ["AGENTS.md", "CLAUDE.md", "README.md", "PROJECT_REFERENCE.md", "guidelines/**", "requirements.txt", "requirements-dev.txt", ".gitignore", ".mcp.json"],
+      "dependencies": [],
+      "entryPoints": ["AGENTS.md", "README.md"]
+    },
+    {
+      "id": "figma-workflow-skill",
+      "label": "Figma workflow skill",
+      "layer": "Agent workflow",
+      "description": "Orchestrates Figma extraction, candidate construction, independent QA, repair, and release.",
+      "paths": [".claude/skills/build-figma-page/**"],
+      "dependencies": ["artifact-contracts", "frontend-design-skills", "governance", "host-adapters", "render-and-qa", "state-controller", "validation-and-tests"],
+      "entryPoints": [".claude/skills/build-figma-page/SKILL.md"]
+    },
+    {
+      "id": "codemap-skill",
+      "label": "Codemap skill",
+      "layer": "Agent workflow",
+      "description": "Builds and queries the durable workspace map used for repository orientation.",
+      "paths": [".claude/skills/codemap/**"],
+      "dependencies": ["governance"],
+      "entryPoints": [".claude/skills/codemap/SKILL.md", ".claude/skills/codemap/scripts/codemap.py"]
+    },
+    {
+      "id": "frontend-design-skills",
+      "label": "Frontend design skills",
+      "layer": "Agent workflow",
+      "description": "Provides optional design-direction guidance and Vercel interface-review rules for matching frontend tasks.",
+      "paths": [".claude/skills/taste-skill/**", ".claude/skills/web-design-guidelines/**"],
+      "dependencies": ["governance"],
+      "entryPoints": [".claude/skills/taste-skill/SKILL.md", ".claude/skills/web-design-guidelines/SKILL.md"]
+    },
+    {
+      "id": "host-adapters",
+      "label": "Claude adapter",
+      "layer": "Agent workflow",
+      "description": "Configures Claude subagent roles and skills.",
+      "paths": [".claude/agents/**", ".claude/settings.json", ".claude/state/**"],
+      "dependencies": ["figma-workflow-skill"],
+      "entryPoints": [".claude/settings.json"]
+    },
+    {
+      "id": "state-controller",
+      "label": "Lifecycle state controller",
+      "layer": "Deterministic runtime",
+      "description": "Creates and transitions projects, pages, sources, runs, candidates, QA records, and releases.",
+      "paths": ["scripts/kit.py", "scripts/log-agent-event.py"],
+      "dependencies": ["artifact-contracts", "governance"],
+      "entryPoints": ["scripts/kit.py"]
+    },
+    {
+      "id": "artifact-contracts",
+      "label": "Artifact contracts",
+      "layer": "Deterministic runtime",
+      "description": "Defines machine-readable schemas and example structures for sources, runs, specifications, content, and QA.",
+      "paths": ["schemas/**", "templates/**"],
+      "dependencies": ["governance"],
+      "entryPoints": []
+    },
+    {
+      "id": "render-and-qa",
+      "label": "Rendering and QA evidence",
+      "layer": "Deterministic runtime",
+      "description": "Serves and renders candidates, measures browser output, compares pixels, verifies accepted evidence, and generates the four human-reviewer QA DOCX deliverables (overview, design, content, coding).",
+      "paths": ["scripts/render-page.py", "scripts/serve.py", "scripts/browser-summary.py", "scripts/visual-diff.py", "scripts/visual-summary.py", "scripts/verify-output.py", "scripts/measure-footer.py", "scripts/crop-bands.py", "scripts/create-qa-docs.py", "qa-reports/**"],
+      "dependencies": ["artifact-contracts", "state-controller"],
+      "entryPoints": ["scripts/serve.py", "scripts/render-page.py", "scripts/verify-output.py", "scripts/create-qa-docs.py"]
+    },
+    {
+      "id": "validation-and-tests",
+      "label": "Validation and tests",
+      "layer": "Verification",
+      "description": "Checks repository integrity and exercises lifecycle invariants and mapping behavior.",
+      "paths": ["scripts/validate-kit.py", "tests/**"],
+      "dependencies": ["artifact-contracts", "codemap-skill", "figma-workflow-skill", "frontend-design-skills", "host-adapters", "render-and-qa", "state-controller"],
+      "entryPoints": ["scripts/validate-kit.py"]
+    },
+    {
+      "id": "project-workspaces",
+      "label": "Project workspaces",
+      "layer": "Mutable artifacts",
+      "description": "Provides the versioned template for project-local guideline workspaces while runtime project state remains outside the architecture map.",
+      "paths": ["projects/_template/**"],
+      "dependencies": ["artifact-contracts", "figma-workflow-skill", "governance", "state-controller"],
+      "entryPoints": []
+    }
+  ]
+}

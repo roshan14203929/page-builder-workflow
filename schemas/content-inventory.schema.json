@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Exact Figma content inventory",
+  "type": "object",
+  "required": [
+    "version",
+    "items"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "heading",
+              "paragraph",
+              "label",
+              "link",
+              "button",
+              "caption",
+              "legal",
+              "alt",
+              "other"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "nodeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sectionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "style": {
+            "description": "Inline style object, or a key into the top-level styles table.",
+            "type": [
+              "object",
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "styles": {
+      "type": "object",
+      "description": "Shared style table; item.style may reference a key here.",
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

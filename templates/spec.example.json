@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "page": {
+    "name": "Example",
+    "language": "en",
+    "variantScope": {
+      "mode": "single-desktop",
+      "supplied": ["desktop"],
+      "fidelityTargets": ["desktop"],
+      "confidence": 1,
+      "evidence": "One supplied 1440px-wide top-level page frame"
+    }
+  },
+  "variants": [
+    { "id": "desktop", "label": "Desktop", "nodeId": "1:2", "width": 1440, "height": 900, "reference": "desktop.png" }
+  ],
+  "tokens": { "colors": [], "typography": [], "spacing": [], "radii": [], "shadows": [], "components": [] },
+  "sections": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "sourceNodeIds": ["1:3"],
+      "bounds": { "desktop": { "x": 0, "y": 0, "width": 1440, "height": 900 } },
+      "textItemIds": ["hero-title"],
+      "assetIds": [],
+      "layout": {},
+      "visual": {},
+      "inference": { "confidence": 1, "evidence": "Top-level named frame" }
+    }
+  ],
+  "assets": [],
+  "openQuestions": []
+}
