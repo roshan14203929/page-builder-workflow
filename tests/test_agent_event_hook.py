@@ -128,7 +128,8 @@ def test_the_subagents_own_transcript_is_preferred(tmp_path: Path) -> None:
     assert recorded["usageScope"] == "subagent"
     assert recorded["usage"]["cumulative_tokens"] == 24_866  # the subagent, not the session
     assert recorded["usage"]["messages"] == 1
-    assert recorded["transcriptPath"].endswith("subagents/agent-abc123.jsonl")
+    # The hook records an OS-native path, so compare parts rather than separators.
+    assert Path(recorded["transcriptPath"]).parts[-2:] == ("subagents", "agent-abc123.jsonl")
 
 
 def test_a_subagent_transcript_is_counted_whole_not_as_a_delta(tmp_path: Path) -> None:

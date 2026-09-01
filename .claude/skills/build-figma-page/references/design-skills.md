@@ -17,7 +17,7 @@ the guidance relevant to decisions the Figma source leaves unspecified. Exact
 Figma copy, geometry, tokens, assets, responsive variants, user decisions, and
 the effective guideline snapshot always take precedence.
 
-`.agents/skills/taste-skill/SKILL.md` is roughly 87 KB, and most of it cannot
+`.claude/skills/taste-skill/SKILL.md` is roughly 87 KB, and most of it cannot
 apply here: it covers selecting and installing a design system, redesigning an
 existing site, and building a block library, all of which this workflow either
 forbids or resolves from the Figma source. Read only the sections that bear on
@@ -47,7 +47,7 @@ record Taste as not applicable in the builder handoff and continue normally.
 ## Web Interface Guidelines during QA
 
 The orchestrator fetches the current Vercel guideline source named in
-`.agents/skills/web-design-guidelines/SKILL.md` **once per run**, before
+`.claude/skills/web-design-guidelines/SKILL.md` **once per run**, before
 delegating QA, and passes the document plus its provenance to both the UI and
 accessibility reviewers in their handoffs. Previously each reviewer fetched it
 separately, which repeated the same request twice per QA round and again on

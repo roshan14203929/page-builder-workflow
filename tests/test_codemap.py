@@ -8,7 +8,7 @@ from pathlib import Path
 from conftest import ROOT
 
 
-CODEMAP = ROOT / ".agents" / "skills" / "codemap" / "scripts" / "codemap.py"
+CODEMAP = ROOT / ".claude" / "skills" / "codemap" / "scripts" / "codemap.py"
 
 
 def run_codemap(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
