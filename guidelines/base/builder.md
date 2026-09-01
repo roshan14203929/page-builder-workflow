@@ -17,7 +17,10 @@
   redesigning its content.
 - Do not use inline styles, `!important`, remote scripts, trackers, frameworks,
   or fabricated placeholder copy.
-- Keep each semantic section independently replaceable for focused repairs.
+- Keep each semantic section's HTML independently replaceable for focused
+  repairs: self-contained `<section>` blocks with clear IDs. Shared CSS
+  component classes may span sections — section isolation applies to the HTML,
+  not the CSS.
 - Use `design-taste-frontend` only when the orchestrator routes it for a landing
   page, portfolio, marketing/editorial page, or redesign. State a one-line
   Design Read and apply it only to choices the source leaves unspecified.
@@ -46,6 +49,26 @@
 - Do not use `!important`; remove the conflicting inline style or cascade issue
   that made it appear necessary.
 
+## CSS component architecture
+
+- HTML sections are independently replaceable DOM units for repair targeting.
+  CSS components are shared classes used across multiple sections. These are
+  separate concerns — do not confuse them.
+- Before writing any section HTML, define shared component classes in `page.css`
+  first: buttons, cards, tags, typography utilities, and any pattern that
+  appears in more than one section.
+- Express per-section differences as BEM modifiers on the component, not as
+  descendant selectors: `.btn` defines the base and `.btn--hero` adjusts its
+  size, rather than `.hero .btn`. This keeps selectors shallow and keeps the
+  component readable on its own.
+- Do not copy a component's full ruleset into a section block. Reference the
+  shared component class and add a modifier only where the section genuinely
+  differs; a modifier declares only the properties that change.
+- Open `page.css` with a comment block listing the component vocabulary, so the
+  next agent can see the intended shared classes before reading any selector.
+  Keep it accurate — it is the one comment exempt from the deletion rule below,
+  and every repair that adds or renames a component class updates it.
+
 ## CSS architecture and hygiene
 
 - Put global element rules such as `img`, `ul`, and `body` in `base.css`, not a
@@ -59,4 +82,5 @@
   `scroll-margin-top` equal to the actual fixed-header height so the target is
   not obscured after navigation.
 - Delete commented-out CSS and remove or correct comments that no longer match
-  the code they describe.
+  the code they describe. The component-vocabulary block at the top of
+  `page.css` is required: correct it rather than deleting it.

@@ -37,6 +37,12 @@ URL. Accept additional desktop, tablet, or mobile variant URLs when supplied.
 Use lowercase hyphenated identifiers. If the project or page is absent, create
 it with the state controller rather than manually creating directories.
 
+Confirm the delivery platform at intake — `medichannel` (XHTML 1.0 Strict) or
+`html5` (M3, CareNet) — and record it with `kit.py init-project --platform` or
+`kit.py set-platform`. The two rulesets are mutually exclusive and determine
+which coding standards every agent receives; `new-run` refuses to start without
+one. Ask the user if the platform is not evident from the ticket.
+
 Treat the supplied frames as the complete fidelity scope unless the user says
 otherwise. Infer each frame's role from explicit labels, frame names, width,
 and matching content structure; do not infer a missing mobile or desktop
@@ -71,7 +77,11 @@ and evidence, and stop for genuinely ambiguous or contradictory variants.
 4. Mark the source ready, create a run, and transition it to `BUILDING`.
 5. Classify the page, conditionally route Design Taste, and delegate a first
    candidate build into a fresh candidate directory.
-6. Run static validation, local browser rendering, and pixel comparison.
+6. Run the structural check on the above-the-fold region immediately after the
+   builder completes: it catches catastrophic layout misreads before a full
+   build cycle is spent on them. Allow at most one builder re-entry, then run
+   full static validation, local browser rendering, and pixel comparison
+   regardless.
 7. Accept only a valid non-regressing candidate; then transition to
    `VERIFYING`.
 8. Delegate content, UI, accessibility, and technical QA independently. UI and

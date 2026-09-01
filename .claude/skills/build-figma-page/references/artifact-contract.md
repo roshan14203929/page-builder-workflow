@@ -150,8 +150,10 @@ Every QA agent returns:
 The controller stamps `runId` and `candidateId` while recording the report, so
 reports from an earlier candidate cannot release a later candidate. Findings
 require `id`, `severity`, and `message`; add `section`, `evidence`, and
-`suggestedFix` when available. Valid statuses are `PASS`, `FAIL`, and
-`UNAVAILABLE`. Valid severities are `critical`, `high`, `medium`, and `low`.
+`suggestedFix` when available. A finding tied to a vertical region also carries
+`bands: { "start": <px>, "end": <px> }` in reference-image coordinates, so the
+orchestrator can group findings by locality mechanically instead of parsing
+prose. Valid statuses are `PASS`, `FAIL`, and `UNAVAILABLE`. Valid severities are `critical`, `high`, `medium`, and `low`.
 The `webInterfaceGuidelines` object is required only for UI and accessibility
 checks. A failed fetch records `fetchStatus: "FAILED"` and a null `sha256`; it
 does not replace the repository's base review.
@@ -161,5 +163,13 @@ does not replace the repository's base review.
 Store static checks under `visual/static.json`, browser diagnostics beside each
 PNG as `<viewport>.png.json`, per-viewport diffs as
 `visual/<viewport>-diff.json`, and their aggregate as `visual/summary.json`.
-Temporary reviewer JSON may live in `qa/incoming/`; `qa-record` copies and
-stamps the authoritative report.
+Store the structural check's reference crop, candidate render, and diff under
+the candidate's `structural-check/` directory; it is pre-acceptance diagnostic
+evidence and is not a QA gate. Temporary reviewer JSON may live in
+`qa/incoming/`; `qa-record` copies and stamps the authoritative report.
+
+A visual report may also carry `status: "ERROR"` with a `reason`. That means no
+comparison was performed — most often `dimension-mismatch`, where the reference
+was not exported at 1x or does not match its `spec.variants` dimensions. It is
+missing evidence, not a visual regression, and it blocks acceptance without
+being recorded as a failure or consuming a repair round.

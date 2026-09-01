@@ -20,6 +20,9 @@ def run_kit(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
         check=False,
         capture_output=True,
         text=True,
+        # kit.py emits UTF-8; guideline documents contain characters a cp1252
+        # locale cannot decode, and the default would silently yield None stdout.
+        encoding="utf-8",
     )
     if check and result.returncode != 0:
         raise AssertionError(result.stderr or result.stdout)

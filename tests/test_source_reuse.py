@@ -38,7 +38,7 @@ def test_state_controller_has_no_personal_token_or_figma_rest_dependency() -> No
 def test_new_source_deduplicates_canonical_variants_and_requires_force_reason(project_factory) -> None:
     project_id = "source-reuse-test"
     project_factory(project_id)
-    kit("init-project", project_id, "Source reuse test")
+    kit("init-project", project_id, "Source reuse test", "--platform", "html5")
     kit("init-page", project_id, "home", "Home")
     source = kit("new-source", project_id, "home", "--variant", "desktop=https://www.figma.com/design/example/Home?node-id=1-2&t=first")
     duplicate = run_kit("new-source", project_id, "home", "--variant", "desktop=https://www.figma.com/design/example/Home?node-id=1-2&t=second", check=False)
@@ -60,7 +60,7 @@ def test_new_source_deduplicates_canonical_variants_and_requires_force_reason(pr
 def test_incremental_sources_merge_changed_nodes_and_preserve_lineage(project_factory) -> None:
     project_id = "source-patch-test"
     project_root = project_factory(project_id)
-    kit("init-project", project_id, "Source patch test")
+    kit("init-project", project_id, "Source patch test", "--platform", "html5")
     kit("init-page", project_id, "home", "Home")
     base = kit("new-source", project_id, "home", "--variant", "desktop=https://www.figma.com/design/example/Home?node-id=1-2")
     prepare_ready_source(base)
@@ -111,7 +111,7 @@ def test_incremental_sources_merge_changed_nodes_and_preserve_lineage(project_fa
 def test_rate_limit_calls_are_recorded_without_creating_another_source(project_factory) -> None:
     project_id = "source-rate-limit-test"
     project_root = project_factory(project_id)
-    kit("init-project", project_id, "Source rate limit test")
+    kit("init-project", project_id, "Source rate limit test", "--platform", "html5")
     kit("init-page", project_id, "home", "Home")
     source = kit("new-source", project_id, "home", "--variant", "desktop=https://www.figma.com/design/example/Home?node-id=1-2")
     kit("source-call", project_id, "home", str(source["sourceId"]), "--operation", "get-screenshot", "--node", "1:2", "--status", "RATE_LIMITED", "--retry-after", "3600", "--message", "Figma returned HTTP 429")
@@ -128,7 +128,7 @@ def test_rate_limit_calls_are_recorded_without_creating_another_source(project_f
 def test_legacy_sources_without_a_stored_fingerprint_are_still_reused(project_factory) -> None:
     project_id, page_id = "legacy-fp", "home"
     project_factory(project_id)
-    kit("init-project", project_id)
+    kit("init-project", project_id, "--platform", "html5")
     kit("init-page", project_id, page_id)
     url = "https://www.figma.com/design/FILEKEY1/Doc?node-id=10-20"
     source = kit("new-source", project_id, page_id, "--variant", f"desktop={url}")
@@ -150,7 +150,7 @@ def test_legacy_sources_without_a_stored_fingerprint_are_still_reused(project_fa
 def test_ported_controller_commands_are_dispatchable(project_factory) -> None:
     project_id, page_id = "ported-cmds", "home"
     project_factory(project_id)
-    kit("init-project", project_id)
+    kit("init-project", project_id, "--platform", "html5")
     kit("init-page", project_id, page_id)
 
     # status works with and without a page argument

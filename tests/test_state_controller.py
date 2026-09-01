@@ -14,7 +14,7 @@ def write_json(path: Path, value: object) -> None:
 def test_state_controller_creates_an_immutable_released_run(project_factory) -> None:
     project_id, page_id = "state-controller-test", "home"
     project_factory(project_id)
-    kit("init-project", project_id, "State controller test")
+    kit("init-project", project_id, "State controller test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     source = kit(
         "new-source", project_id, page_id,

@@ -78,8 +78,19 @@ read-only Figma API and local Python scripts.
 
 ## 4. Guidelines (`guidelines/`) — layered quality rules
 
-Resolution order is **global → base (role-specific) → project → page**; every run
-snapshots the resolved set plus a SHA-256 hash.
+Resolution order is **global → base (role-specific + platform) → project →
+page**; every run snapshots the resolved set plus a SHA-256 hash.
+
+Base guidelines have two axes. **Role** picks one file per agent
+(`builder.md`, `ui-qa.md`, …). **Platform** picks the coding-standard bundle for
+the project's delivery target, recorded on `project.json` by `init-project
+--platform` / `set-platform`: `medichannel` delivers `xhtml-coding-rules.md`,
+`medichannel-delivery-standards.md`, and `xhtml-vs-html5-reference.md` to every
+role plus `az-html-qa-guide.md` to the four QA roles; `html5` delivers
+`html-coding-rules.md`. The two rulesets are mutually exclusive, so `new-run`
+refuses to start until a platform is set, and a role-scoped read without one
+opens with an explicit warning. The unscoped read remains the full archival
+record of every base file.
 
 - **`global.md`** — the master rulebook: extraction rules, run immutability,
   numeric QA gates (max 3 repair rounds, 5% full-page pixel diff ceiling, 12%
@@ -103,7 +114,8 @@ snapshots the resolved set plus a SHA-256 hash.
 ## 5. Scripts (`scripts/`) — all the deterministic machinery, run by the orchestrator (not the agents)
 
 - **`kit.py`** — the state controller. One CLI with subcommands for every
-  lifecycle transition: `init-project`, `init-page`, deduplicating or
+  lifecycle transition: `init-project`, `set-platform`, `init-page`,
+  deduplicating or
   incremental `new-source`, `source-budget`, `source-call`, `source-patch`,
   `resolve-question`, `source-ready`/`source-fail`, `new-run`, `transition`,
   `new-candidate`, `candidate-result`, `qa-record`, `qa-summary`,
@@ -111,11 +123,18 @@ snapshots the resolved set plus a SHA-256 hash.
   `help`. This is the only thing allowed to mutate `run.json`/`source.json`/etc.
   — agents never touch state files directly.
 - **`render-page.py`** — uses Playwright/Chromium to screenshot a local
-  candidate page at a given viewport width/height.
+  candidate page at a given viewport width/height, and at a given device scale
+  factor (`--scale`) when the reference was exported above 1x.
 - **`verify-output.py`** — static validator: checks a generated directory against
   the content inventory (produces the "technical report" / static check).
 - **`visual-diff.py`** — Pillow/Pixelmatch-based diff between one reference PNG and one
-  candidate PNG, with configurable full-page and peak-band thresholds.
+  candidate PNG, with configurable full-page and peak-band thresholds. Requires
+  identical dimensions; a mismatch is reported as `status: ERROR` /
+  `reason: dimension-mismatch` (exit 3) rather than as a 100% visual failure.
+- **`crop-region.py`** — crops a fixed band (default the top 900 px) from a PNG
+  at native resolution, for the pre-validation structural check. Takes an image
+  rather than a diff report, and never pads — a short image is truncated and the
+  sidecar JSON reports the real height for the caller to render against.
 - **`visual-summary.py`** — aggregates multiple per-viewport `visual-diff.py`
   reports into one summary used for candidate acceptance.
 - **`browser-summary.py`** — aggregates multiple per-viewport render/diagnostic

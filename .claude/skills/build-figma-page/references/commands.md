@@ -3,7 +3,8 @@
 Run from the kit root.
 
 ```bash
-python scripts/kit.py init-project <project> "<name>"
+python scripts/kit.py init-project <project> "<name>" [--platform medichannel|html5]
+python scripts/kit.py set-platform <project> --platform medichannel|html5
 python scripts/kit.py init-page <project> <page> "<name>"
 python scripts/kit.py new-source <project> <page> --variant desktop=<url> --variant mobile=<url>
 python scripts/kit.py new-source <project> <page> --from-source <source> --changed-node desktop=<node-id> --reason "<change>"
@@ -14,17 +15,19 @@ python scripts/kit.py resolve-question <project> <page> <source> --question <id>
 python scripts/kit.py source-ready <project> <page> <source>
 python scripts/kit.py spec-compact <project> <page> <source>
 python scripts/kit.py inventory <project> <page> <source> --sections
-python scripts/kit.py inventory <project> <page> <source> [--variant <label>] [--section <id>] [--kind <kind>] [--node <node-id>] [--id <item-id>] [--text <substring>] [--required] [--fields id,kind,text|all] [--limit <n>] [--offset <n>]
+python scripts/kit.py inventory <project> <page> <source> --tree [--section <id>] [--variant <label>] [--kind <kind>] [--component <name>] [--fields id,kind,text|all]
+python scripts/kit.py inventory <project> <page> <source> [--variant <label>] [--section <id>] [--kind <kind>] [--node <node-id>] [--id <item-id>] [--text <substring>] [--required] [--fields id,kind,text|all] [--limit <n>] [--offset <n>] [--component <name>]
 python scripts/kit.py source-fail <project> <page> <source> --message "<reason>"
 python scripts/kit.py guidelines <project> <page> [--role builder|extractor|ui|content|accessibility|technical]
 python scripts/kit.py new-run <project> <page> --source <source>
 python scripts/kit.py transition <project> <page> <run> BUILDING
 python scripts/kit.py new-candidate <project> <page> <run> --round 0 --scope full-page
 python scripts/verify-output.py --root <candidate-dir> --inventory <inventory> --output <report>
-python scripts/render-page.py --root <candidate-dir> --output <candidate.png> --width <width> --height <height> --full-page false
+python scripts/render-page.py --root <candidate-dir> --output <candidate.png> --width <width> --height <height> [--scale 1] --full-page false
 python scripts/browser-summary.py --report <desktop.png.json> --report <mobile.png.json> --output <browser-summary.json>
 python scripts/visual-diff.py --reference <reference.png> --candidate <candidate.png> --output <visual-review.json>
 python scripts/crop-bands.py --report <desktop-diff.json> --output <desktop-crops.json> [--regions 3] [--pad 40] [--min-difference 5]
+python scripts/crop-region.py --image <reference.png> --output <crop.png> [--top 900] [--start 0]
 python scripts/visual-summary.py --report <desktop-review.json> --report <mobile-review.json> --output <visual-summary.json>
 python scripts/kit.py candidate-result <project> <page> <run> <candidate> --status accepted --static <static.json> --browser <browser-summary.json> --metrics <visual-summary.json>
 python scripts/kit.py transition <project> <page> <run> VERIFYING
@@ -56,10 +59,17 @@ verdict, and the exact generated payload: `images/`, `index.html`, `base.css`,
 and `page.css`.
 
 `guidelines` resolves the global, base, project, and page layers in precedence
-order. With `--role` it includes only that role's file from `guidelines/base/`,
-which is how every agent should read its guidelines. `new-run` still writes the
-unscoped snapshot to `effective-guidelines.md`, so release evidence stays
-complete.
+order. With `--role` it includes that role's file from `guidelines/base/` **plus
+the project's platform bundle**, which is how every agent should read its
+guidelines. `new-run` still writes the unscoped snapshot to
+`effective-guidelines.md`, so release evidence stays complete.
+
+Platform is a second axis, orthogonal to role. MediChannel (XHTML 1.0 Strict)
+delivers `xhtml-coding-rules.md`, `medichannel-delivery-standards.md`, and
+`xhtml-vs-html5-reference.md` to every role, plus `az-html-qa-guide.md` to the
+four QA roles; HTML5 delivers `html-coding-rules.md`. `new-run` fails until a
+platform is set, and a role-scoped read with no platform opens with an explicit
+warning rather than silently omitting the standards.
 
 `crop-bands.py` reads a `visual-diff.py` report, fuses its adjacent `worstBands`
 into coherent regions, and writes native-resolution reference/candidate/diff
@@ -70,3 +80,36 @@ downscaled too far to read.
 losslessly and reports the byte change; `spec-compact` applies the same
 normalization on demand. Prefer `inventory` slices over reading
 `spec/content-inventory.json` in full, and never read `raw/figma-*.json`.
+
+`inventory --tree` returns content as `sections → groups → items`, mirroring the
+expected DOM hierarchy. Groups come from `spec.sections[].groups`, which the
+extractor writes from the section frame's direct children. Each section reports
+`groupSource`: `spec` when real structure was found, `fallback` when the section
+had none and all its items landed in one `<sectionId>__content` group. Text
+nodes belonging to no group land in `<sectionId>__other`.
+
+Sections are split by variant: desktop and mobile share a `sectionId`, so each
+`(section, variant)` pair is its own entry. Pass `--variant` when building one
+viewport. All the usual filters apply (`--section`, `--variant`, `--kind`,
+`--required`, `--component`, `--fields`); `--limit` and `--offset` are rejected,
+because paging a tree truncates mid-section and yields a misleading blueprint.
+
+`--component <name>` (works with `--tree`, `--sections`, and flat mode) filters
+results to the sections containing instances of the named Figma component,
+matched case-insensitively as a substring of `tokens.components[].name`. An
+unknown name is an error listing the recorded component names — it never
+silently returns an empty or unfiltered result. Use it during Pre-Build Analysis
+to find every section that shares a component pattern.
+
+`crop-region.py` crops a fixed band from a PNG at native resolution, for the
+structural check. Unlike `crop-bands.py` it takes an image rather than a diff
+report, and crops a known region rather than the worst-differing one. It never
+pads: a short image is truncated and the sidecar JSON reports the actual
+`height`, which the caller passes to `render-page.py --height` so the pair has
+identical dimensions.
+
+`render-page.py --scale` sets the browser's device scale factor. Use it when a
+reference was exported above 1x, so the candidate is rasterized natively instead
+of resampling the reference. `visual-diff.py` requires exact dimension equality;
+a mismatch returns `status: ERROR`, `reason: dimension-mismatch`, and exit 3,
+which means *evidence is missing*, not that the page regressed.

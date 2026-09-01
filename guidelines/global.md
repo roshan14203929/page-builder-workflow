@@ -180,9 +180,16 @@ Write the resolved source list and SHA-256 hash into every run.
 
 ## Platform guidelines
 
-Confirm the platform at ticket intake. MediChannel and HTML5 (M3, CareNet) have
+Confirm the platform at ticket intake and record it with
+`kit.py set-platform <project> --platform medichannel|html5` (or pass
+`--platform` to `init-project`). MediChannel and HTML5 (M3, CareNet) have
 mutually exclusive coding standards — building under the wrong ruleset means a
-complete rebuild.
+complete rebuild — so `new-run` refuses to start until a platform is set.
+
+The files listed below are delivered automatically: `kit.py guidelines --role
+<role>` includes the platform bundle alongside the role's own guidelines. Do not
+read them from `guidelines/` directly. If a snapshot opens with a "no platform is
+set" warning, stop and set the platform before building.
 
 **MediChannel (XHTML 1.0 Strict, internal, 960 px)**
 

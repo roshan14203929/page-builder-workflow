@@ -13,7 +13,7 @@ STYLE_B = {"fontFamily": "Meiryo", "fontSize": 16, "fontWeight": 400}
 def build_source(project_factory, project_id: str) -> tuple[str, str, Path]:
     page_id = "home"
     project_factory(project_id)
-    kit("init-project", project_id, "Compaction test")
+    kit("init-project", project_id, "Compaction test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     source = kit(
         "new-source", project_id, page_id,

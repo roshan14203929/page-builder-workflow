@@ -12,7 +12,8 @@ Never add model API calls, model API keys, a database, or a queue.
 - Install Chromium for browser checks: `python -m playwright install chromium`
 - Validate kit: `python scripts/validate-kit.py`
 - Run tests: `pytest`
-- Create project: `python scripts/kit.py init-project <project> [name]`
+- Create project: `python scripts/kit.py init-project <project> [name] --platform medichannel|html5`
+- Set platform later: `python scripts/kit.py set-platform <project> --platform medichannel|html5`
 - Create page: `python scripts/kit.py init-page <project> <page> [name]`
 - Preview output: `python scripts/serve.py <generated-directory>`
 

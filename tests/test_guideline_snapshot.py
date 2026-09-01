@@ -33,7 +33,7 @@ def ready_source(project_id: str, page_id: str) -> None:
 def test_new_run_records_a_real_guideline_snapshot(project_factory) -> None:
     project_id, page_id = "guideline-snapshot-test", "home"
     project_root = project_factory(project_id)
-    kit("init-project", project_id, "Guideline snapshot test")
+    kit("init-project", project_id, "Guideline snapshot test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     write(project_root / "guidelines" / "brand.md", "# Brand\n\n- Use the brand teal.\n")
     write(project_root / "pages" / page_id / "guidelines" / "scope.md", "# Scope\n\n- Desktop only.\n")
@@ -65,7 +65,7 @@ def test_new_run_records_a_real_guideline_snapshot(project_factory) -> None:
 def test_snapshot_hashes_track_guideline_edits(project_factory) -> None:
     project_id, page_id = "guideline-snapshot-hash-test", "home"
     project_root = project_factory(project_id)
-    kit("init-project", project_id, "Guideline hash test")
+    kit("init-project", project_id, "Guideline hash test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     write(project_root / "guidelines" / "brand.md", "# Brand\n\n- Original rule.\n")
     ready_source(project_id, page_id)
@@ -82,10 +82,14 @@ def test_snapshot_hashes_track_guideline_edits(project_factory) -> None:
     assert changed["sha256"] != original["sha256"]
 
 
-def test_role_scoped_read_returns_only_the_matching_base_file(project_factory) -> None:
+def sections(snapshot: str) -> list[str]:
+    return [line[3:].strip() for line in snapshot.splitlines() if line.startswith("## guidelines/")]
+
+
+def test_role_scoped_read_returns_the_role_file_and_the_platform_bundle(project_factory) -> None:
     project_id, page_id = "guideline-role-test", "home"
     project_root = project_factory(project_id)
-    kit("init-project", project_id, "Role scope test")
+    kit("init-project", project_id, "Role scope test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     write(project_root / "guidelines" / "brand.md", "# Brand\n\n- Use the brand teal.\n")
 
@@ -93,13 +97,21 @@ def test_role_scoped_read_returns_only_the_matching_base_file(project_factory) -
     technical = run_kit("guidelines", project_id, page_id, "--role", "technical").stdout
     everything = run_kit("guidelines", project_id, page_id).stdout
 
-    assert "guidelines/base/builder.md" in builder
-    assert "guidelines/base/technical-qa.md" not in builder
-    assert "guidelines/base/technical-qa.md" in technical
-    assert "guidelines/base/builder.md" not in technical
+    # A role gets its own file plus the platform's coding standards, never
+    # another role's file. global.md names the platform rules by path, so
+    # omitting them would leave the agent unable to reach them at all.
+    assert sections(builder) == [
+        "guidelines/global.md",
+        "guidelines/base/builder.md",
+        "guidelines/base/html-coding-rules.md",
+    ]
+    assert sections(technical) == [
+        "guidelines/global.md",
+        "guidelines/base/html-coding-rules.md",
+        "guidelines/base/technical-qa.md",
+    ]
     # Global, project, and page layers are present for every role.
     for scoped in (builder, technical):
-        assert "guidelines/global.md" in scoped
         assert "Use the brand teal" in scoped
         assert len(scoped) < len(everything)
     # The unscoped read stays the complete archival record.
@@ -107,10 +119,49 @@ def test_role_scoped_read_returns_only_the_matching_base_file(project_factory) -
         assert f"guidelines/base/{name}.md" in everything
 
 
+def test_medichannel_delivers_xhtml_rules_and_the_qa_guide_to_qa_roles(project_factory) -> None:
+    project_id, page_id = "guideline-platform-test", "home"
+    project_factory(project_id)
+    kit("init-project", project_id, "Platform test", "--platform", "medichannel")
+    kit("init-page", project_id, page_id, "Home")
+
+    builder = sections(run_kit("guidelines", project_id, page_id, "--role", "builder").stdout)
+    ui = sections(run_kit("guidelines", project_id, page_id, "--role", "ui").stdout)
+
+    xhtml = {
+        "guidelines/base/xhtml-coding-rules.md",
+        "guidelines/base/medichannel-delivery-standards.md",
+        "guidelines/base/xhtml-vs-html5-reference.md",
+    }
+    assert xhtml <= set(builder) and xhtml <= set(ui)
+    # The QA workflow guide goes to reviewers, not to the builder.
+    assert "guidelines/base/az-html-qa-guide.md" in ui
+    assert "guidelines/base/az-html-qa-guide.md" not in builder
+    # HTML5 rules must never leak into a MediChannel build.
+    assert "guidelines/base/html-coding-rules.md" not in builder
+
+
+def test_a_run_cannot_start_without_a_platform(project_factory) -> None:
+    project_id, page_id = "guideline-no-platform-test", "home"
+    project_factory(project_id)
+    kit("init-project", project_id, "No platform test")
+    kit("init-page", project_id, page_id, "Home")
+    ready_source(project_id, page_id)
+
+    result = run_kit("new-run", project_id, page_id, "--source", "source-001", check=False)
+
+    assert result.returncode != 0
+    assert "has no platform" in result.stderr
+    # A role-scoped read still works, but says plainly what is missing.
+    scoped = run_kit("guidelines", project_id, page_id, "--role", "builder").stdout
+    assert "no platform is set" in scoped
+    assert sections(scoped) == ["guidelines/global.md", "guidelines/base/builder.md"]
+
+
 def test_unknown_role_is_rejected(project_factory) -> None:
     project_id, page_id = "guideline-bad-role-test", "home"
     project_factory(project_id)
-    kit("init-project", project_id, "Bad role test")
+    kit("init-project", project_id, "Bad role test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
 
     result = run_kit("guidelines", project_id, page_id, "--role", "nonsense", check=False)
@@ -122,7 +173,7 @@ def test_unknown_role_is_rejected(project_factory) -> None:
 def test_run_snapshot_stays_unscoped(project_factory) -> None:
     project_id, page_id = "guideline-archival-test", "home"
     project_factory(project_id)
-    kit("init-project", project_id, "Archival test")
+    kit("init-project", project_id, "Archival test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     ready_source(project_id, page_id)
 
@@ -131,14 +182,19 @@ def test_run_snapshot_stays_unscoped(project_factory) -> None:
         (Path(str(run["root"])) / "run.json").read_text(encoding="utf-8")
     )["guidelineSnapshot"]["sources"]]
 
-    # A run records every role's guidelines, so release evidence stays complete.
-    assert len([p for p in paths if p.startswith("guidelines/base/")]) == 6
+    # A run records every role's and every platform's guidelines, so release
+    # evidence stays complete regardless of which platform the project targets.
+    base = [p for p in paths if p.startswith("guidelines/base/")]
+    expected = sorted(
+        f"guidelines/base/{p.name}" for p in (ROOT / "guidelines" / "base").glob("*.md")
+    )
+    assert base == expected
 
 
 def test_global_guidelines_are_always_first(project_factory) -> None:
     project_id, page_id = "guideline-precedence-test", "home"
     project_factory(project_id)
-    kit("init-project", project_id, "Precedence test")
+    kit("init-project", project_id, "Precedence test", "--platform", "html5")
     kit("init-page", project_id, page_id, "Home")
     ready_source(project_id, page_id)
 

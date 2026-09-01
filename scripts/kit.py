@@ -101,10 +101,22 @@ def transition(a,b,c,status,extra={}):
   if status not in TRANS.get(x['status'],set()): bad(f"Invalid run transition {x['status']} -> {status}.")
   at=now();x['status']=status;x['completedAt']=at if status in TERMINAL else None;x['events'].append({'at':at,'type':'status','status':status,**extra});return x
  v=update(f,fn);active(project=a,page=b,run=c,status=status);return v
-def init_project(a,name):
+def checkplatform(v):
+ if v is None or v is True:return None
+ v=str(v).strip().lower()
+ if v not in PLATFORMS:bad(f"Unknown platform: {v}. Use one of: {', '.join(sorted(PLATFORMS))}.")
+ return v
+def init_project(a,name,o=None):
  d=prj(a)
  if d.exists(): bad(f'Project already exists: {a}')
- t=now();(d/'guidelines').mkdir(parents=True);(d/'pages').mkdir();write(d/'project.json',{'id':a,'name':name or a,'description':'','createdAt':t,'updatedAt':t});return {'projectId':a,'root':str(d)}
+ pf=checkplatform((o or {}).get('platform'))
+ t=now();(d/'guidelines').mkdir(parents=True);(d/'pages').mkdir();write(d/'project.json',{'id':a,'name':name or a,'description':'','platform':pf,'createdAt':t,'updatedAt':t});return {'projectId':a,'root':str(d),'platform':pf}
+def setplatform(a,o):
+ f=prj(a)/'project.json'
+ if not f.exists():bad(f'Project does not exist: {a}')
+ pf=checkplatform(o.get('platform'))
+ if pf is None:bad(f"set-platform requires --platform <{'|'.join(sorted(PLATFORMS))}>.")
+ update(f,lambda x:{**x,'platform':pf,'updatedAt':now()});return {'projectId':a,'platform':pf,'guidelines':sorted(f"guidelines/base/{n}" for n in platform_files('builder',pf)|platform_files('ui',pf))}
 def init_page(a,b,name):
  require_page_base=prj(a)
  if not (require_page_base/'project.json').exists(): bad(f'Project does not exist: {a}')
@@ -216,14 +228,32 @@ def compact(a,b,c):
   before=f.stat().st_size;v=read(f);wcompact(f,fn(v) if fn else v)
   res.append({'file':name,'bytesBefore':before,'bytesAfter':f.stat().st_size})
  return {'projectId':a,'pageId':b,'sourceId':c,'normalized':res}
+def speclite(a,b,c):
+ f=src(a,b,c)/'spec/spec.json'
+ return read(f) if f.exists() else {}
 def inventory(a,b,c,o):
- v=read(src(a,b,c)/'spec/content-inventory.json');items=v.get('items',[]) or [];st=v.get('styles',{}) or {}
+ v=read(src(a,b,c)/'spec/content-inventory.json');items=v.get('items',[]) or [];st=v.get('styles',{}) or {};total=len(items)
+ # --component: restrict items to the sections that use the named Figma component(s).
+ # Every failure here is explicit: silently returning the whole page or nothing at all
+ # is worse than an error, because the caller cannot tell which happened.
+ comp_filter=vals(o.get('component'));matched_comps=[]
+ if comp_filter:
+  if not (src(a,b,c)/'spec/spec.json').exists():bad('--component needs spec/spec.json, which is missing from this source.')
+  cat=[e for e in (speclite(a,b,c).get('tokens',{}) or {}).get('components') or [] if isinstance(e,dict)]
+  hits=[e for e in cat if any(str(w).lower() in str(e.get('name') or '').lower() for w in comp_filter)]
+  if not hits:bad(f"No entry in tokens.components matches {', '.join(str(w) for w in comp_filter)}. Recorded components: {', '.join(sorted(str(e.get('name') or '?') for e in cat)) or '<none>'}")
+  matched_comps=sorted({str(e.get('name') or '?') for e in hits})
+  keep_secs={sid for e in hits for sid in (e.get('sectionIds') or [])}
+  if not keep_secs:bad(f"Matched components ({', '.join(matched_comps)}) record no sectionIds, so the inventory cannot be filtered by component. Re-extract the source.")
+  items=[it for it in items if it.get('sectionId') in keep_secs]
  if o.get('sections') is True:
   g={}
   for it in items:
    k=str(it.get('sectionId'));x=g.setdefault(k,{'sectionId':it.get('sectionId'),'items':0,'kinds':set(),'variants':set()})
    x['items']+=1;x['kinds'].add(it.get('kind'));x['variants'].add(it.get('variant'))
-  return {'sourceId':c,'total':len(items),'sections':[{**x,'kinds':sorted(y for y in x['kinds'] if y),'variants':sorted(y for y in x['variants'] if y)} for x in g.values()]}
+  res={'sourceId':c,'total':total,'matched':len(items),'sections':[{**x,'kinds':sorted(y for y in x['kinds'] if y),'variants':sorted(y for y in x['variants'] if y)} for x in g.values()]}
+  if matched_comps:res['components']=matched_comps
+  return res
  def keep(it):
   for k,f in (('variant','variant'),('kind','kind'),('section','sectionId'),('node','nodeId'),('id','id')):
    w=[str(x) for x in vals(o.get(k))]
@@ -235,11 +265,47 @@ def inventory(a,b,c,o):
  sel=[it for it in items if keep(it)]
  fl=o.get('fields')
  fl=None if fl=='all' else ([x for w in vals(fl) for x in str(w).split(',') if x] or list(INVFIELDS))
+ def proj(it):return {k:it[k] for k in fl if k in it} if fl else it
+ def styles(out):
+  used={it['style'] for it in out if isinstance(it.get('style'),str)}
+  return {k:st[k] for k in sorted(used) if k in st} if used else None
+ if o.get('tree') is True:
+  # Paging a tree would truncate mid-section and yield a misleading blueprint.
+  if o.get('limit') is not None or o.get('offset') is not None:bad('--limit and --offset do not apply to --tree. Narrow the tree with --section, --variant, --kind, or --component instead.')
+  sp_secs=[s for s in speclite(a,b,c).get('sections') or [] if isinstance(s,dict) and s.get('id')]
+  sec_meta={s['id']:s for s in sp_secs};rank={s['id']:i for i,s in enumerate(sp_secs)}
+  # Bucket by (sectionId, variant): desktop and mobile share a sectionId, and
+  # merging them would list every node twice in one group.
+  bkts={}
+  for it in sel:bkts.setdefault((it.get('sectionId'),it.get('variant')),[]).append(it)
+  out_secs=[];shown=[]
+  for sid,var in sorted(bkts,key=lambda k:(rank.get(k[0],len(sp_secs)),str(k[0]),str(k[1]))):
+   its=bkts[(sid,var)];sm=sec_meta.get(sid) or {}
+   gs=[g for g in (sm.get('groups') or []) if isinstance(g,dict)]
+   gid=lambda i,g:str(g.get('groupId') or f'{sid}__group-{i+1:02d}')
+   nid_map={nid:gid(i,g) for i,g in enumerate(gs) for nid in (g.get('textNodeIds') or [])}
+   if nid_map:
+    label={gid(i,g):g.get('label') for i,g in enumerate(gs)};order={gid(i,g):i for i,g in enumerate(gs)}
+    gbkt={}
+    for it in its:gbkt.setdefault(nid_map.get(it.get('nodeId'),f'{sid}__other'),[]).append(it)
+    groups=[]
+    for k in sorted(gbkt,key=lambda g:(order.get(g,len(gs)),g)):
+     rows=[proj(x) for x in gbkt[k]];shown+=rows
+     groups.append({'groupId':k,**({'label':label[k]} if label.get(k) else {}),'items':rows})
+    gsrc='spec'
+   else:
+    rows=[proj(it) for it in its];shown+=rows
+    groups=[{'groupId':f'{sid}__content','items':rows}];gsrc='fallback'
+   out_secs.append({'sectionId':sid,'variant':var,'role':sm.get('role'),'groupSource':gsrc,'groups':groups})
+  res={'sourceId':c,'total':total,'matched':len(sel),'sections':out_secs}
+  if matched_comps:res['components']=matched_comps
+  if (s:=styles(shown)):res['styles']=s
+  return res
  off=max(0,int(o.get('offset') or 0));lim=o.get('limit');sel2=sel[off:off+int(lim)] if lim and lim is not True else sel[off:]
- out=[{k:it[k] for k in fl if k in it} for it in sel2] if fl else sel2
- res={'sourceId':c,'total':len(items),'matched':len(sel),'returned':len(out),'offset':off,'items':out}
- used={it['style'] for it in out if isinstance(it.get('style'),str)}
- if used:res['styles']={k:st[k] for k in sorted(used) if k in st}
+ out=[proj(it) for it in sel2]
+ res={'sourceId':c,'total':total,'matched':len(sel),'returned':len(out),'offset':off,'items':out}
+ if matched_comps:res['components']=matched_comps
+ if (s:=styles(out)):res['styles']=s
  return res
 def ready(a,b,c):
  r=src(a,b,c);f=r/'source.json';s=read(f)
@@ -259,9 +325,28 @@ def ready(a,b,c):
  norm=compact(a,b,c)
  t=now();update(f,lambda x:{**x,'status':'READY','completedAt':t,'error':None,'referenceState':x['referenceState'] if x.get('extractionMode')=='INCREMENTAL' else {z['label']:'REFRESHED' for z in x['figma']['variants']}});update(page(a,b)/'page.json',lambda x:{**x,'status':'SOURCE_READY','currentSourceId':c,'updatedAt':t});return {'projectId':a,'pageId':b,'sourceId':c,'status':'READY','normalized':norm['normalized']}
 GUIDE=ROOT/'guidelines';ROLES={'builder':'builder','extractor':'extractor','ui':'ui-qa','content':'content-qa','accessibility':'accessibility-qa','technical':'technical-qa'}
+# Platform coding standards are a second axis, orthogonal to role. MediChannel
+# (XHTML 1.0 Strict) and HTML5 are mutually exclusive: building under the wrong
+# ruleset means a rebuild, so a role-scoped read delivers the role file *and* the
+# project's platform bundle. Without this, guidelines/global.md names these files
+# by path while no agent ever receives them.
+PLATFORMS={
+ 'medichannel':{'all':('xhtml-coding-rules','medichannel-delivery-standards','xhtml-vs-html5-reference'),'qa':('az-html-qa-guide',)},
+ 'html5':{'all':('html-coding-rules',),'qa':()},
+}
+QAROLES={'ui','content','accessibility','technical'}
+def platform_of(a):
+ f=prj(a)/'project.json'
+ v=(read(f).get('platform') if f.exists() else None) or None
+ if v is not None and v not in PLATFORMS:bad(f"Project {a} records an unknown platform: {v}. Use one of: {', '.join(sorted(PLATFORMS))}.")
+ return v
+def platform_files(role,plat):
+ if not plat or role is None:return set()
+ s=PLATFORMS[plat];return {n+'.md' for n in s['all']}|({n+'.md' for n in s['qa']} if role in QAROLES else set())
 def gfiles(a,b,role=None):
  out=[GUIDE/'global.md'] if (GUIDE/'global.md').exists() else []
- if (GUIDE/'base').is_dir():out+=sorted(x for x in (GUIDE/'base').glob('*.md') if x.is_file() and (role is None or x.name==ROLES[role]+'.md'))
+ keep=None if role is None else {ROLES[role]+'.md'}|platform_files(role,platform_of(a))
+ if (GUIDE/'base').is_dir():out+=sorted(x for x in (GUIDE/'base').glob('*.md') if x.is_file() and (keep is None or x.name in keep))
  for d in (prj(a)/'guidelines',page(a,b)/'guidelines'):
   if d.is_dir():out+=sorted(x for x in d.glob('*.md') if x.is_file())
  return out
@@ -270,7 +355,9 @@ def guidelines(a,b,o):
  if role is not None and role is not True and role not in ROLES:bad(f"Unknown role: {role}. Use one of: {', '.join(sorted(ROLES))}.")
  return snapshot(a,b,role if role in ROLES else None)[0]
 def snapshot(a,b,role=None):
- body=['# Effective guideline snapshot','',f"Role scope: {role or 'all'}.",'Resolved in precedence order: global, base, project, page. Later rules override','earlier rules only where they address the same requirement explicitly.','']
+ plat=platform_of(a)
+ body=['# Effective guideline snapshot','',f"Role scope: {role or 'all'}.",f"Platform: {plat or 'not set'}.",'Resolved in precedence order: global, base, project, page. Later rules override','earlier rules only where they address the same requirement explicitly.','']
+ if role is not None and not plat:body+=['> **Warning:** no platform is set for this project, so no platform coding','> standards are included below. The rules named in the Platform guidelines','> section of `guidelines/global.md` are NOT part of this snapshot. Set the','> platform with `kit.py set-platform <project> --platform <name>` and re-read.','']
  srcs=[]
  for f in gfiles(a,b,role):
   x=f.read_text(encoding='utf8');rel=f.relative_to(ROOT).as_posix()
@@ -280,6 +367,10 @@ def snapshot(a,b,role=None):
  return '\n'.join(body)+'\n',srcs
 def newrun(a,b,o):
  d=require_page(a,b);p=read(d/'page.json');c=o.get('source') or p.get('currentSourceId')
+ # Platform is confirmed at ticket intake: MediChannel and HTML5 standards are
+ # mutually exclusive, so a run started without one would build against no
+ # coding standard at all.
+ if not platform_of(a):bad(f"Project {a} has no platform. Confirm it at intake and set it with: kit.py set-platform {a} --platform <{'|'.join(sorted(PLATFORMS))}>")
  if not c:bad('No ready source is selected. Extract and mark a source READY first.')
  s=read(src(a,b,c)/'source.json')
  if s['status']!='READY':bad(f"Source {c} is {s['status']}, not READY.")
@@ -299,6 +390,7 @@ def result(a,b,c,i,o):
  if st not in {'ACCEPTED','REJECTED'}:bad('candidate-result requires --status accepted|rejected.')
  payload(d,'Candidate deployable output',ignore=('candidate.json',))
  m=read(Path(o['metrics'])) if o.get('metrics') else None; static=read(Path(o['static'])) if o.get('static') else None; browser=read(Path(o['browser'])) if o.get('browser') else None
+ if st=='ACCEPTED' and m and m.get('status')=='ERROR':bad(f"Visual evidence is unavailable, so this candidate cannot be accepted: {m.get('reason') or 'comparison error'}. Fix the evidence and re-measure; do not treat it as a visual failure.")
  if st=='ACCEPTED' and any(not q or q.get('status')!='PASS' for q in (m,static,browser)):bad('Accepted candidates require passing static, browser, and visual reports.')
  t=now();x=read(f);x.update(status=st,evaluatedAt=t,metrics=m,evidence={'static':static,'browser':browser},reasons=[o['reason']] if o.get('reason') else []);write(f,x)
  if st=='ACCEPTED':rm(r/'generated');cp(d,r/'generated');(r/'generated'/'candidate.json').unlink(missing_ok=True);rm(r/'qa');(r/'qa').mkdir()
@@ -375,9 +467,15 @@ def report(a,b):
  return {'project':pr,'page':read(page(a,b)/'page.json'),'runs':[read(x/'run.json') for x in sorted(d.iterdir()) if (x/'run.json').exists()] if d.exists() else []}
 def help():return 'Layerlift agent-kit state controller\n'
 def main():
+ # Guideline documents are UTF-8. On a cp1252 console, printing one raises
+ # UnicodeEncodeError and the agent gets no guidelines at all.
+ for s in (sys.stdout,sys.stderr):
+  try:s.reconfigure(encoding='utf-8')
+  except Exception:pass
  cmd,*v=sys.argv[1:] or ['help'];p,o=opts(v)
  if cmd=='help':out=help()
- elif cmd=='init-project':out=init_project(safe(p[0],'project identifier'),p[1] if len(p)>1 else None)
+ elif cmd=='init-project':out=init_project(safe(p[0],'project identifier'),p[1] if len(p)>1 else None,o)
+ elif cmd=='set-platform':out=setplatform(safe(p[0],'project identifier'),o)
  elif cmd=='init-page':out=init_page(safe(p[0],'project identifier'),safe(p[1],'page identifier'),p[2] if len(p)>2 else None)
  elif cmd=='new-source':out=new_source(p[0],p[1],o)
  elif cmd=='source-call':out=call(p[0],p[1],p[2],o)

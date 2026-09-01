@@ -57,14 +57,17 @@ def local_server(root: Path, entry: str) -> ThreadingHTTPServer:
 
 async def _render(args: dict[str, str]) -> int:
     if not args.get("root") or not args.get("output"):
-        raise ValueError("Usage: render-page.py --root <site-dir> --output <png> [--width 1440] [--height 900] [--entry index.html]")
+        raise ValueError("Usage: render-page.py --root <site-dir> --output <png> [--width 1440] [--height 900] [--scale 1] [--entry index.html]")
     root, output = Path(args["root"]).resolve(), Path(args["output"]).resolve()
     width, height = int(args.get("width", "1440")), int(args.get("height", "900"))
+    scale = float(args.get("scale", "1"))
     entry = args.get("entry", "index.html")
     if not 240 <= width <= 10000:
         raise ValueError("Invalid viewport width.")
     if not 240 <= height <= 10000:
         raise ValueError("Invalid viewport height.")
+    if not 0.5 <= scale <= 4:
+        raise ValueError("Invalid device scale factor; use a value between 0.5 and 4.")
     server = local_server(root, entry)
     import threading
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -75,7 +78,7 @@ async def _render(args: dict[str, str]) -> int:
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(headless=True)
             try:
-                page = await browser.new_page(viewport={"width": width, "height": height}, device_scale_factor=1)
+                page = await browser.new_page(viewport={"width": width, "height": height}, device_scale_factor=scale)
                 page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
 
                 def request_failed(request: Any) -> None:
@@ -131,7 +134,7 @@ async def _render(args: dict[str, str]) -> int:
             finally:
                 await browser.close()
         structural_failures = diagnostics["h1Count"] != 1 or diagnostics["emptyLinks"] > 0 or diagnostics["unnamedButtons"] > 0 or diagnostics["unlabeledInputs"] > 0 or diagnostics["imagesMissingAlt"] > 0 or bool(diagnostics["duplicateIds"])
-        report = {"status": "FAIL" if console_errors or failed_requests or diagnostics["scrollWidth"] > diagnostics["clientWidth"] + 1 or structural_failures else "PASS", "checkedAt": now(), "viewport": {"width": width, "height": height}, "output": str(output), "diagnostics": diagnostics, "consoleErrors": console_errors, "failedRequests": failed_requests}
+        report = {"status": "FAIL" if console_errors or failed_requests or diagnostics["scrollWidth"] > diagnostics["clientWidth"] + 1 or structural_failures else "PASS", "checkedAt": now(), "viewport": {"width": width, "height": height, "scale": scale}, "output": str(output), "diagnostics": diagnostics, "consoleErrors": console_errors, "failedRequests": failed_requests}
         rendered = json.dumps(report, indent=2) + "\n"
         Path(f"{output}.json").write_text(rendered, encoding="utf-8")
         sys.stdout.write(rendered)

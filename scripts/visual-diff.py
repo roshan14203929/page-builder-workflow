@@ -37,9 +37,19 @@ def main() -> int:
     difference_threshold = float(args.get("threshold", "5"))
     peak_threshold = float(args.get("peak-threshold", "12"))
     if reference.size != candidate.size:
-        report = {"status": "FAIL", "createdAt": now(), "reason": "Reference and candidate dimensions differ.", "reference": {"width": reference.width, "height": reference.height}, "candidate": {"width": candidate.width, "height": candidate.height}, "pixelDifferencePercent": 100, "visualSimilarityPercent": 0, "peakBandDifferencePercent": 100, "thresholds": {"differenceThreshold": difference_threshold, "peakThreshold": peak_threshold}}
+        # A size mismatch is a harness problem, not a visual regression. Reporting it
+        # as a 100% difference would record a catastrophic QA failure for what is
+        # really missing evidence: re-export the reference at 1x, or re-render the
+        # candidate at the reference's width, height, and scale.
+        report = {
+            "status": "ERROR", "createdAt": now(), "reason": "dimension-mismatch",
+            "detail": "Reference and candidate dimensions differ, so no comparison was performed.",
+            "reference": {"width": reference.width, "height": reference.height},
+            "candidate": {"width": candidate.width, "height": candidate.height},
+            "thresholds": {"differenceThreshold": difference_threshold, "peakThreshold": peak_threshold},
+        }
         write_report(output, report)
-        return 2
+        return 3
 
     diff = Image.new("RGBA", reference.size)
     mismatched = pixelmatch(reference, candidate, diff, threshold=0.1, includeAA=False, diff_mask=True)

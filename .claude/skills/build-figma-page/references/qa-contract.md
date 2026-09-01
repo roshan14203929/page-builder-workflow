@@ -23,7 +23,9 @@ body copy and fine print are no longer legible. Inspect the full-page images
 **once** for layout, section ordering, and vertical rhythm, then run
 `crop-bands.py` against each diff report and base pixel judgements on the
 native-resolution crops it produces. Crops supplement the full-page pass; they
-do not replace it. Cite the band y-range in any finding drawn from a crop.
+do not replace it. Record the band y-range of any finding drawn from a crop in
+its `bands: { "start", "end" }` field as well as in the message — the
+orchestrator groups findings by locality from that field, not from prose.
 
 Use `spec.page.variantScope` as the fidelity boundary. Only supplied fidelity
 targets receive pixel comparison and source-intent responsive findings. Do not
@@ -45,6 +47,14 @@ Use fixed-height screenshots (`--full-page false`) when Figma references have
 fixed viewport heights. Use full-page screenshots only when the reference was
 exported using the same full-page convention. Combine every per-viewport diff
 with `visual-summary.py`; candidate acceptance uses that aggregate.
+
+`visual-diff.py` compares only images of identical dimensions. References are
+exported at 1x matching their `spec.variants` width and height; render the
+candidate at those same values, using `render-page.py --scale` when a reference
+is at a higher density. A mismatch yields `status: ERROR`,
+`reason: dimension-mismatch`, and exit 3 — missing evidence, not a regression.
+Do not record it as a UI failure or convert it into findings; correct the
+dimensions and re-measure.
 
 ## Accessibility
 

@@ -95,7 +95,7 @@ Defines machine-readable schemas and example structures for sources, runs, speci
 Serves and renders candidates, measures browser output, compares pixels, verifies accepted evidence, and generates the four human-reviewer QA DOCX deliverables (overview, design, content, coding).
 
 - Owns: 9 files, 1284 lines
-- Paths: `scripts/render-page.py`, `scripts/serve.py`, `scripts/browser-summary.py`, `scripts/visual-diff.py`, `scripts/visual-summary.py`, `scripts/verify-output.py`, `scripts/measure-footer.py`, `scripts/crop-bands.py`, `scripts/create-qa-docs.py`, `qa-reports/**`
+- Paths: `scripts/render-page.py`, `scripts/serve.py`, `scripts/browser-summary.py`, `scripts/visual-diff.py`, `scripts/visual-summary.py`, `scripts/verify-output.py`, `scripts/measure-footer.py`, `scripts/crop-bands.py`, `scripts/crop-region.py`, `scripts/create-qa-docs.py`, `qa-reports/**`
 - Depends on: `artifact-contracts`, `state-controller`
 - Used by: `figma-workflow-skill`, `validation-and-tests`
 - Entry points: `scripts/create-qa-docs.py`, `scripts/render-page.py`, `scripts/serve.py`, `scripts/verify-output.py`
