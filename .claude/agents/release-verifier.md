@@ -1,5 +1,6 @@
 ---
 name: release-verifier
+model: claude-haiku-4-5
 description: Perform the read-only final gate for source, run, accepted artifacts, guideline snapshot, QA completeness, and release readiness.
 tools: Read, Grep, Glob, Bash
 permissionMode: plan

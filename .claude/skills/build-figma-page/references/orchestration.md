@@ -41,6 +41,27 @@ of reopening one.
    each handoff so unsupplied widths remain diagnostic unless explicitly
    required. They are
    read-only and return one QA JSON object each. The main agent records them.
+### Handoff ordering for QA reviewers
+
+Structure every reviewer handoff with stable content first and variable content
+last. Prompt caching requires a stable prefix; a run ID or candidate path at the
+top of a handoff invalidates the cache on every run.
+
+Order:
+1. Web Interface Guidelines text + provenance (UI and accessibility reviewers only)
+2. Effective guidelines — `kit.py guidelines <project> <page> --role <role>`
+3. Source spec summary — `tokens` block from `spec/spec.json`
+4. Content inventory — `kit.py inventory` filtered to the relevant sections
+5. `page.variantScope`
+---
+6. Run ID, candidate ID, accepted candidate directory path
+7. Render, diff, crop, and QA artifact paths
+8. Candidate-specific metrics or prior grouped findings (repair rounds only)
+
+Keep items 1–5 textually identical across successive runs on the same page so
+the cached prefix carries over. Never put a run ID, timestamp, or path before
+the stable block.
+
 7. Invoke `release_verifier` / `release-verifier` after the summary passes and
    record its verdict with `release-check`.
 8. On failure, apply the repair grouping process below, then create a new

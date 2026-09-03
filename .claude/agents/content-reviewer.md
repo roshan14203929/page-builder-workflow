@@ -1,5 +1,6 @@
 ---
 name: content-reviewer
+model: claude-haiku-4-5
 description: Independently verify all visible and accessible output content against the Figma source and exact content inventory.
 tools: Read, Grep, Glob, Bash
 permissionMode: plan

@@ -1,5 +1,6 @@
 ---
 name: accessibility-reviewer
+model: claude-haiku-4-5
 description: Independently verify semantic structure, headings, accessible names, labels, keyboard use, focus, alternative text, and reduced motion.
 tools: Read, Grep, Glob, Bash, WebFetch
 permissionMode: plan

@@ -1,5 +1,6 @@
 ---
 name: repair-builder
+model: claude-sonnet-5
 description: Repair only failed sections in a new isolated candidate while preserving accepted content and pixels outside the target scope.
 tools: Read, Write, Edit, Bash, Glob, Grep
 permissionMode: acceptEdits

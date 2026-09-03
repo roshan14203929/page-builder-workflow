@@ -1,5 +1,6 @@
 ---
 name: ui-reviewer
+model: claude-sonnet-5
 description: Independently inspect Figma references, candidate renders, pixel diffs, responsive behavior, and interactive UI states.
 tools: Read, Grep, Glob, Bash, WebFetch
 permissionMode: plan

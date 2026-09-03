@@ -1,5 +1,6 @@
 ---
 name: page-builder
+model: claude-opus-5
 description: Build one isolated semantic and responsive HTML/CSS candidate from a normalized Figma source and effective guidelines.
 tools: Read, Write, Edit, Bash, Glob, Grep
 permissionMode: acceptEdits

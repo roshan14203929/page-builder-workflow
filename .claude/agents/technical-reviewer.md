@@ -1,5 +1,6 @@
 ---
 name: technical-reviewer
+model: claude-haiku-4-5
 description: Independently verify document integrity, local assets, browser errors, network failures, overflow, placeholders, and local portability.
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
