@@ -71,4 +71,4 @@ validation status, and unresolved conflicts.
 Figma evidence, user decisions, and effective guidelines override Taste
 guidance.
 
-Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role builder`. That resolves global, base, project, and page layers in precedence order and omits the other roles' base files. Do not read `guidelines/` directly.
+Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role builder [--prev-hash <hash>]`. If the first line of output is `GUIDELINE_CACHE_HIT`, extract the `path:` value from the second line and use the Read tool on that path to get the full guidelines text. Otherwise the output is the full guidelines text. Do not read `guidelines/` directly.

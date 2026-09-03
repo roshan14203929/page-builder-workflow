@@ -12,6 +12,7 @@ def bad(s): raise ValueError(s)
 def now(): return datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00','Z')
 def dump(v,compact=False): return json.dumps(v,ensure_ascii=False,indent=None if compact else 2,separators=(',',':') if compact else None)
 def sha(v): return hashlib.sha256(dump(v,True).encode()).hexdigest()
+def gcache(a,role,h):d=prj(a)/'.guideline-cache';d.mkdir(exist_ok=True);return d/f"{role or 'all'}-{h}.md"
 def safe(v,label='identifier'):
  if not v or not ID.fullmatch(str(v)): bad(f"Invalid {label}: {v if v is not None else '<missing>'}")
  return str(v)
@@ -44,6 +45,11 @@ def cp(a,b):
  a=Path(a);b=Path(b)
  if a.is_dir(): shutil.copytree(a,b,dirs_exist_ok=True)
  else: b.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(a,b)
+def specbase(a,b,c):
+ d=src(a,b,c)/'spec';m=d/'manifest.json'
+ if (d/'spec.json').exists():return d
+ if m.exists():return src(a,b,read(m)['baseSourceId'])/'spec'
+ return d
 def rm(a):
  a=Path(a)
  if a.is_dir(): shutil.rmtree(a,ignore_errors=True)
@@ -144,7 +150,8 @@ def new_source(a,b,o):
    if du['status']=='READY':return {'projectId':a,'pageId':b,'sourceId':du['id'],'root':str(src(a,b,du['id'])),'reused':True,'created':False,'extractionMode':'INCREMENTAL'}
    bad(f"Matching incremental source {du['id']} is {du['status']}. Reuse it, or pass --force-new --reason <text> for a deliberate new extraction.")
   ident=numbered(d/'sources','source');r=src(a,b,ident);r.mkdir(parents=True)
-  for x in ('raw','spec','assets','reference'): cp(bd/x,r/x) if (bd/x).exists() else (r/x).mkdir()
+  for x in ('raw','assets','reference'): cp(bd/x,r/x) if (bd/x).exists() else (r/x).mkdir()
+  (r/'spec').mkdir();write(r/'spec/manifest.json',{'baseSourceId':base})
   if (bd/'asset-manifest.json').exists():cp(bd/'asset-manifest.json',r/'asset-manifest.json')
   stale={x['variantLabel'] for x in changes};t=now();write(r/'source.json',{'id':ident,'status':'EXTRACTING','fingerprint':old.get('fingerprint'),'extractionMode':'INCREMENTAL','baseSourceId':base,'changeSet':{'fingerprint':f,'changedNodes':changes,'reason':o['reason'].strip()},'figma':copy.deepcopy(old['figma']),'referenceState':{x['label']:'STALE' if x['label'] in stale else 'REUSED' for x in old['figma']['variants']},'provenance':{'reusedFrom':base,'refreshedSections':[],'refreshedAssets':[],'appliedPatches':[]},'callLedger':[],'forceNewReason':o['reason'].strip() if force else None,'createdAt':t,'completedAt':None,'warnings':[],'error':None});return {'projectId':a,'pageId':b,'sourceId':ident,'baseSourceId':base,'root':str(r),'reused':False,'created':True,'extractionMode':'INCREMENTAL','changedNodes':changes}
  raw=vals(o.get('variant')); urls=vals(o.get('figma-url'))
@@ -228,11 +235,19 @@ def compact(a,b,c):
   before=f.stat().st_size;v=read(f);wcompact(f,fn(v) if fn else v)
   res.append({'file':name,'bytesBefore':before,'bytesAfter':f.stat().st_size})
  return {'projectId':a,'pageId':b,'sourceId':c,'normalized':res}
+def sourcedelta(a,b,c):
+ s=read(src(a,b,c)/'source.json')
+ if s.get('extractionMode')!='INCREMENTAL':return {'sourceId':c,'extractionMode':'FULL'}
+ changed_nids={x['nodeId'] for x in s.get('changeSet',{}).get('changedNodes',[])}
+ spec=read(specbase(a,b,c)/'spec.json')
+ stale=[sec['id'] for sec in spec.get('sections',[]) if any(n in changed_nids for n in sec.get('sourceNodeIds',[]))]
+ reused=[sec['id'] for sec in spec.get('sections',[]) if sec['id'] not in stale]
+ return {'sourceId':c,'baseSourceId':s.get('baseSourceId'),'extractionMode':'INCREMENTAL','staleSectionIds':stale,'reusedSectionIds':reused,'changedNodes':s.get('changeSet',{}).get('changedNodes',[])}
 def speclite(a,b,c):
- f=src(a,b,c)/'spec/spec.json'
+ f=specbase(a,b,c)/'spec.json'
  return read(f) if f.exists() else {}
 def inventory(a,b,c,o):
- v=read(src(a,b,c)/'spec/content-inventory.json');items=v.get('items',[]) or [];st=v.get('styles',{}) or {};total=len(items)
+ v=read(specbase(a,b,c)/'content-inventory.json');items=v.get('items',[]) or [];st=v.get('styles',{}) or {};total=len(items)
  # --component: restrict items to the sections that use the named Figma component(s).
  # Every failure here is explicit: silently returning the whole page or nothing at all
  # is worse than an error, because the caller cannot tell which happened.
@@ -310,6 +325,12 @@ def inventory(a,b,c,o):
 def ready(a,b,c):
  r=src(a,b,c);f=r/'source.json';s=read(f)
  if s['status']!='EXTRACTING':bad(f"Source {c} is immutable because it is {s['status']}.")
+ stale=[k for k,v in s.get('referenceState',{}).items() if v in {'STALE','PENDING'}]
+ if s.get('extractionMode')=='INCREMENTAL' and stale:bad(f"Incremental source has stale reference evidence for: {', '.join(stale)}. Apply refreshed references before marking it READY.")
+ if (r/'spec/manifest.json').exists() and not (r/'spec/spec.json').exists():
+  bd=specbase(a,b,c)
+  for nm in ('spec.json','content-inventory.json'):
+   if (bd/nm).exists():cp(bd/nm,r/'spec'/nm)
  for x in ('spec/spec.json','spec/content-inventory.json','asset-manifest.json'):
   if not(r/x).exists():bad(f'Source cannot become READY; missing {x}.')
  spec=read(r/'spec/spec.json')
@@ -320,8 +341,6 @@ def ready(a,b,c):
   q=next((x for x in spec.get('variants',[]) if x.get('label')==v['label'] or x.get('id')==v['label']),None); ref=(q or {}).get('reference',(q or {}).get('referenceFilename'))
   if not q:bad(f"Source spec is missing supplied variant: {v['label']}.")
   if not ref or Path(ref).name not in png:bad(f"Source variant {v['label']} has no matching PNG reference export.")
- stale=[k for k,v in s.get('referenceState',{}).items() if v in {'STALE','PENDING'}]
- if s.get('extractionMode')=='INCREMENTAL' and stale:bad(f"Incremental source has stale reference evidence for: {', '.join(stale)}. Apply refreshed references before marking it READY.")
  norm=compact(a,b,c)
  t=now();update(f,lambda x:{**x,'status':'READY','completedAt':t,'error':None,'referenceState':x['referenceState'] if x.get('extractionMode')=='INCREMENTAL' else {z['label']:'REFRESHED' for z in x['figma']['variants']}});update(page(a,b)/'page.json',lambda x:{**x,'status':'SOURCE_READY','currentSourceId':c,'updatedAt':t});return {'projectId':a,'pageId':b,'sourceId':c,'status':'READY','normalized':norm['normalized']}
 GUIDE=ROOT/'guidelines';ROLES={'builder':'builder','extractor':'extractor','ui':'ui-qa','content':'content-qa','accessibility':'accessibility-qa','technical':'technical-qa'}
@@ -353,7 +372,10 @@ def gfiles(a,b,role=None):
 def guidelines(a,b,o):
  role=o.get('role')
  if role is not None and role is not True and role not in ROLES:bad(f"Unknown role: {role}. Use one of: {', '.join(sorted(ROLES))}.")
- return snapshot(a,b,role if role in ROLES else None)[0]
+ role=role if role in ROLES else None;prev=o.get('prev-hash')
+ g,_,h=snapshot(a,b,role)
+ if prev and prev==h:cp=gcache(a,role,h);return f"GUIDELINE_CACHE_HIT\nhash: {h}\npath: {str(cp)}"
+ return g
 def snapshot(a,b,role=None):
  plat=platform_of(a)
  body=['# Effective guideline snapshot','',f"Role scope: {role or 'all'}.",f"Platform: {plat or 'not set'}.",'Resolved in precedence order: global, base, project, page. Later rules override','earlier rules only where they address the same requirement explicitly.','']
@@ -364,7 +386,9 @@ def snapshot(a,b,role=None):
   srcs.append({'path':rel,'sha256':hashlib.sha256(x.encode()).hexdigest()})
   body+=[f'## {rel}','',x.strip(),'']
  if not srcs:bad('No guideline sources resolved; a run requires at least guidelines/global.md.')
- return '\n'.join(body)+'\n',srcs
+ g='\n'.join(body)+'\n';h=hashlib.sha256(g.encode()).hexdigest();cp=gcache(a,role,h)
+ if not cp.exists():cp.write_text(g,encoding='utf8')
+ return g,srcs,h
 def newrun(a,b,o):
  d=require_page(a,b);p=read(d/'page.json');c=o.get('source') or p.get('currentSourceId')
  # Platform is confirmed at ticket intake: MediChannel and HTML5 standards are
@@ -376,7 +400,7 @@ def newrun(a,b,o):
  if s['status']!='READY':bad(f"Source {c} is {s['status']}, not READY.")
  i=numbered(d/'runs','run');r=run(a,b,i)
  for x in ('candidates','generated/images','visual','qa'):(r/x).mkdir(parents=True,exist_ok=True)
- t=now();g,gs=snapshot(a,b);(r/'effective-guidelines.md').write_text(g,encoding='utf8');write(r/'run.json',{'id':i,'status':'CREATED','sourceId':c,'sourceExtractionMode':s.get('extractionMode','FULL'),'baseSourceId':s.get('baseSourceId'),'previousRunId':p.get('currentRunId'),'startedAt':t,'completedAt':None,'guidelineSnapshot':{'sources':gs,'sha256':hashlib.sha256(g.encode()).hexdigest()},'repair':{'round':0,'maxRounds':3},'candidates':[],'events':[{'at':t,'type':'created','sourceId':c}],'error':None});update(d/'page.json',lambda x:{**x,'status':'BUILDING','currentRunId':i,'updatedAt':t});active(project=a,page=b,run=i,round=0,status='CREATED',candidate=None,task=None);return {'projectId':a,'pageId':b,'runId':i,'sourceId':c,'root':str(r),'guidelineSnapshot':{'sources':[x['path'] for x in gs]}}
+ t=now();g,gs,h=snapshot(a,b);(r/'effective-guidelines.md').write_text(g,encoding='utf8');write(r/'run.json',{'id':i,'status':'CREATED','sourceId':c,'sourceExtractionMode':s.get('extractionMode','FULL'),'baseSourceId':s.get('baseSourceId'),'previousRunId':p.get('currentRunId'),'startedAt':t,'completedAt':None,'guidelineSnapshot':{'sources':gs,'sha256':h},'repair':{'round':0,'maxRounds':3},'candidates':[],'events':[{'at':t,'type':'created','sourceId':c}],'error':None});update(d/'page.json',lambda x:{**x,'status':'BUILDING','currentRunId':i,'updatedAt':t});active(project=a,page=b,run=i,round=0,status='CREATED',candidate=None,task=None);return {'projectId':a,'pageId':b,'runId':i,'sourceId':c,'root':str(r),'guidelineSnapshot':{'sources':[x['path'] for x in gs]}}
 def candidate(a,b,c,o):
  s=mutable(a,b,c);r=run(a,b,c);i=numbered(r/'candidates','candidate');d=r/'candidates'/i;d.mkdir(parents=True);n=int(o.get('round',s['repair']['round']))
  if n<0 or n>s['repair']['maxRounds']:bad('Candidate round is outside the configured repair range.')
@@ -400,7 +424,7 @@ def result(a,b,c,i,o):
 def patch(a,b,c,o):
  f=src(a,b,c)/'source.json';s=read(f);q=read(Path(o['file']))
  if s['status']!='EXTRACTING':bad(f"Source {c} is immutable because it is {s['status']}.")
- r=src(a,b,c);spec=read(r/'spec/spec.json');inv=read(r/'spec/content-inventory.json');man=read(r/'asset-manifest.json'); sections=[x for x in spec['sections'] if x['id'] not in q.get('removeSectionIds',[])]
+ r=src(a,b,c);sb=specbase(a,b,c);spec=read(sb/'spec.json');inv=read(sb/'content-inventory.json');man=read(r/'asset-manifest.json'); sections=[x for x in spec['sections'] if x['id'] not in q.get('removeSectionIds',[])]
  for e in q.get('sections',[]):
   x=e.get('section',e);at=next((i for i,v in enumerate(sections) if v['id']==x['id']),-1)
   if at>=0:sections[at]=x
@@ -484,6 +508,7 @@ def main():
  elif cmd=='guidelines':out=guidelines(p[0],p[1],o)
  elif cmd=='inventory':out=inventory(p[0],p[1],p[2],o)
  elif cmd=='spec-compact':out=compact(p[0],p[1],p[2])
+ elif cmd=='source-delta':out=sourcedelta(p[0],p[1],p[2])
  elif cmd=='source-patch':out=patch(p[0],p[1],p[2],o)
  elif cmd=='new-run':out=newrun(p[0],p[1],o)
  elif cmd=='transition':out=transition(p[0],p[1],p[2],p[3])

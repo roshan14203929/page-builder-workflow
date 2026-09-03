@@ -32,8 +32,10 @@ meaningful sub-structure. The builder's DOM blueprint is derived from this field
 Export every reference PNG at 1x, with pixel dimensions equal to the `width` and
 `height` recorded for that variant in `spec.variants`.
 
+For incremental sources (`extractionMode: INCREMENTAL`), run `python scripts/kit.py source-delta <project> <page> <source>` first. It returns `staleSectionIds` (sections whose Figma nodes changed) and `reusedSectionIds` (sections inherited unchanged from the base source). Re-extract only the stale sections; apply changes via `source-patch`. Sections listed as reused do not need re-extraction.
+
 Do not change project, page, source, or run records. Do not call model APIs. In
 Figma API mode, use only read-only endpoints and never print or persist the
 token. Return warnings, unavailable capabilities, and open questions.
 
-Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role extractor`. That resolves global, base, project, and page layers in precedence order and omits the other roles' base files. Do not read `guidelines/` directly.
+Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role extractor [--prev-hash <hash>]`. If the first line of output is `GUIDELINE_CACHE_HIT`, extract the `path:` value from the second line and use the Read tool on that path to get the full guidelines text. Otherwise the output is the full guidelines text. Do not read `guidelines/` directly.
