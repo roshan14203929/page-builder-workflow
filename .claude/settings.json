@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/log-agent-event.py\""
+            "command": "python \"${CLAUDE_PROJECT_DIR}/scripts/log-agent-event.py\""
           }
         ]
       }
