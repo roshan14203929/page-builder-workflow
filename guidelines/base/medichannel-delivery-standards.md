@@ -120,6 +120,48 @@ Also, avoid element selectors where possible to minimize situations where HTML c
 - Use shorthand notation as much as possible.
 - Omit units for properties with a value of `0`. Example: `margin: 0;`
 - Units should also be omitted for the `line-height` property in principle.
+- **Use `px` for all size values** (font-size, dimensions, spacing, borders). Do not use `rem` or `em` — the page is embedded in a client template whose root font-size is outside our control.
+
+### base.css Structure (overrides global builder defaults)
+
+The following rules apply to MediChannel and override the global `builder.md` guidelines:
+
+- Define all color, typography, and spacing tokens as `:root` CSS custom properties in `base.css`.
+  Include `--font-size-*` and `--line-height-*` variables alongside color tokens.
+- Use **semantic color variable names** (`--color-primary`, `--color-secondary`, `--color-bg`, `--color-text`,
+  `--color-text-muted`, `--color-border`, `--color-bg-light`, `--color-tab-bar`) that match production naming.
+- Set `max-width: 960px; margin: 0 auto;` on `.cst-page` for content containment — never `min-width`.
+- **Never write bare unscoped element resets** such as `* { margin: 0; padding: 0; }`. All element resets
+  must be scoped to `.cst-page` (e.g. `.cst-page *`, `.cst-page ul`, `.cst-page img`). An unscoped reset
+  bleeds into the client template and causes `base.css` to override `page.css` component styles.
+- The `scroll-margin-top` rule for anchor targets must be placed on `div[id]` (not on individual components)
+  and must equal the fixed header height (typically `54px`).
+
+```css
+/* Correct `:root` token structure for MediChannel */
+:root {
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-bg: #f5f3f1;
+  --color-primary: #00b398;
+  --color-primary-dark: #007260;
+  --color-secondary: #ae2573;
+  --color-secondary-dark: #881857;
+  --color-heading: #333f48;
+  --color-text: #333333;
+  --color-text-muted: #666666;
+  --color-text-annotation: #4d4d4d;
+  --color-border: #dddddd;
+  --color-bg-light: #f2f2f2;
+  --color-tab-bar: #202020;
+
+  --font-size-base: 16px;
+  --font-size-sm: 14px;
+  --font-size-xs: 12px;
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.7;
+}
+```
 
 ### CSS3 Selectors and Properties
 

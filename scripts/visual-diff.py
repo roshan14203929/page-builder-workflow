@@ -22,9 +22,10 @@ def options(values: list[str]) -> dict[str, str]:
 
 def write_report(path: Path, report: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    rendered = json.dumps(report, indent=2) + "\n"
-    path.write_text(rendered, encoding="utf-8")
-    sys.stdout.write(rendered)
+    pretty = json.dumps(report, indent=2) + "\n"
+    compact = json.dumps(report, separators=(",", ":")) + "\n"
+    path.write_text(pretty, encoding="utf-8")
+    sys.stdout.write(compact)
 
 
 def main() -> int:

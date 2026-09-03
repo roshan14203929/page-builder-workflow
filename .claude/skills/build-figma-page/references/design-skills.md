@@ -59,13 +59,10 @@ schema, or release thresholds.
 
 Each reviewer must still return a `webInterfaceGuidelines` provenance object
 inside its existing QA object, populated from the shared fetch it was given.
-Record the attempted HTTPS `sourceUrl`, `fetchStatus` (`FETCHED` or `FAILED`),
-resolved commit/ETag as `revision` when available, and the lowercase SHA-256 of
-the exact fetched content. Use `null` for `sha256` when fetching failed and for
-`revision` when no stable revision is exposed. Both reviewers therefore report
-identical provenance for a given run, which is accurate: it describes one
-fetch. The controller validates and preserves this provenance in the released
-QA evidence.
+The required fields and null-handling rules are in `artifact-contract.md §QA
+object`. Both reviewers therefore report identical provenance for a given run,
+which is accurate: it describes one fetch. The controller validates and
+preserves this provenance in the released QA evidence.
 
 If the orchestrator's fetch fails, pass the failure to both reviewers so each
 records `fetchStatus: "FAILED"` with a null hash. A failed fetch is

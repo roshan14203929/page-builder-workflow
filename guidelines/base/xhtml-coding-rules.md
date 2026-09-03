@@ -212,84 +212,24 @@ Prohibited elements (no alternative): `<picture>` `<source>` `<video>` `<audio>`
 
 ---
 
-## 5. Semantic Markup
+## 5. Rules Shared with HTML5 — XHTML Deviations Only
 
-- Use heading elements (`<h2>`, `<h3>`, etc.) for section titles. Do not use `<div>` as a heading for styling purposes.
-- Use `<h1>` only once per page. Do not skip heading levels (e.g., jumping from `<h1>` to `<h3>` is not allowed).
-- Use `<strong>` for semantic emphasis (not `<b>`), and `<em>` for stress emphasis (not `<i>`).
-- Spacer `<div>` elements (e.g., `<div style="height:20px">`) are not allowed. Use CSS `margin` / `padding` instead.
-- Empty elements (`<p></p>`) and empty class attributes (`class=""`, `class=" "`) are not allowed.
+Sections 2–10 of `html-coding-rules.md` (semantic HTML, accessibility, images,
+fonts, HTML quality, CSS naming, CSS values, CSS architecture, CSS hygiene)
+apply here, with the XHTML-specific modifications below.
 
----
+### Structural elements
 
-## 6. Accessibility
+No semantic landmarks (`<main>`, `<section>`, `<article>`, `<nav>`, `<header>`,
+`<footer>`, `<aside>`, `<figure>`, etc.) — use the `<div role="...">`
+alternatives from the table in §4.
 
-- All `<img />` elements must have an `alt` attribute. Content images should have a meaningful description; decorative images should use `alt=""`.
-- `alt` text should describe what the image shows (not the file name or placement).
-- For PNG content images, set the `alt` value based on the immediately preceding `<h3>` or `<h4>` heading text.
-- `aria-label` values should be written in the language of the page (Japanese for Japanese pages).
-- If focus outlines are hidden, provide an equally visible alternative style.
-- Use `:focus-visible` to define keyboard focus styles. Do not combine `:hover` and `:focus` into the same rule.
-- ARIA attributes are not defined in the XHTML 1.0 Strict DTD, but `role` and `aria-*` attributes can still be written (they cause DTD validation errors but are interpreted by browsers).
+### Content model (HTML4, stricter than HTML5)
 
----
+XHTML 1.0 Strict inherits the HTML4 content model:
 
-## 7. Images
-
-- All `<img />` elements must explicitly specify `width` and `height` attributes (to prevent layout shift).
-- `<picture>` is not available in XHTML 1.0 Strict. Place a single `<img />` inside `<div class="img-wrapper">`.
-- `loading`, `fetchpriority`, and `srcset` are not defined in the XHTML 1.0 Strict DTD but can be written (they cause DTD validation errors but are interpreted by modern browsers). Use based on project policy.
-
-**Standard (single image):**
-```xml
-<div class="img-wrapper">
-  <img
-    src="img/image.jpg"
-    alt="Heading text from the preceding h3 or h4"
-    width="960"
-    height="540"
-  />
-</div>
-```
-
-**Retina-ready (`srcset` — outside DTD validation):**
-```xml
-<div class="img-wrapper">
-  <img
-    src="img/image.jpg"
-    srcset="img/image.jpg 1x, img/image@2x.jpg 2x"
-    alt="Heading text from the preceding h3 or h4"
-    width="960"
-    height="540"
-  />
-</div>
-```
-
----
-
-## 8. Fonts
-
-When using a Google Fonts `<link>`, place `<link rel="preconnect">` elements before it. The `type="text/css"` attribute is required.
-
-```xml
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" />
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="https://fonts.googleapis.com/css2?family=..."
-/>
-```
-
-- In XHTML, when adding the `crossorigin` attribute to a self-closing element, include an explicit value: `crossorigin="anonymous"` (attribute minimization is prohibited).
-
----
-
-## 9. Content Model (Nesting Rules)
-
-XHTML 1.0 Strict strictly inherits the HTML4 content model.
-
-- Placing block elements inside inline elements is prohibited:
+- Block-level elements cannot be placed inside inline elements
+  (e.g. `<div>` inside `<a>` is forbidden — HTML5 relaxes this):
   ```xml
   <!-- ❌ Invalid -->
   <a href="#"><div>block in inline</div></a>
@@ -297,73 +237,72 @@ XHTML 1.0 Strict strictly inherits the HTML4 content model.
   <!-- ✅ Correct -->
   <div class="link-block"><a href="#">...</a></div>
   ```
-- `<a>` elements cannot be nested inside another `<a>`.
-- Inside a `<button>`, the following are not allowed: `<input>`, `<select>`, `<textarea>`, `<label>`, `<button>`, `<form>`, `<fieldset>`.
-- `<label>` elements cannot be nested inside another `<label>`.
-- `<form>` elements cannot be nested inside another `<form>`.
+- `<a>` cannot be nested inside another `<a>`.
+- `<button>` cannot contain `<input>`, `<select>`, `<textarea>`, `<label>`,
+  `<button>`, `<form>`, or `<fieldset>`.
+- `<label>` cannot be nested inside another `<label>`.
+- `<form>` cannot be nested inside another `<form>`.
 
----
+### Accessibility
 
-## 10. HTML Code Quality
+- ARIA attributes (`role`, `aria-*`) cause DTD validation errors but are
+  interpreted by browsers — continue using them.
 
-- Do not use inline `style="..."` attributes. Move all values to CSS classes.
-- Do not leave commented-out HTML blocks. Delete unnecessary code. For intentionally excluded sections, leave a `<!-- TODO: reason -->` comment.
-- Character references: When using named character references such as `&nbsp;`, it is safer to use numeric references in XML mode (`application/xhtml+xml`) where the DTD is not loaded:
+### Images
+
+- `<picture>` and `<source>` are unavailable. Wrap a single self-closing
+  `<img />` in `<div class="img-wrapper">`.
+- `loading`, `fetchpriority`, and `srcset` are outside the DTD but interpreted
+  by modern browsers. Use per project policy.
+
+### Fonts and script/link `type` attributes
+
+- `<link rel="stylesheet">` requires `type="text/css"`; `<script>` requires
+  `type="text/javascript"` (already covered in §3).
+- Attribute minimization is prohibited — write `crossorigin="anonymous"`
+  in full; never bare `crossorigin`.
+- Place `<link rel="preconnect">` before the stylesheet `<link>` when using
+  Google Fonts:
+  ```xml
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=..." />
+  ```
+
+### HTML code quality
+
+- Prefer numeric character references over named ones in XML mode
+  (`application/xhtml+xml`), where the DTD is not loaded:
   - `&nbsp;` → `&#160;`
   - `&copy;` → `&#169;`
   - `&mdash;` → `&#8212;`
 
----
+### CSS naming
 
-## 11. CSS — Naming Conventions
+- Use lowercase element names in CSS selectors — XML is case-sensitive.
 
-- Use BEM: `.block`, `.block__element`, `.block--modifier`.
-- Block and element names use hyphens: `.site-header` (not `site_header`).
-- Do not include position or context in class names: `.references--footer` (not `.references__item_section_1`).
-- When writing CSS in external templates or CMS pages, prefix all class names with `cst-` (e.g., `.cst-hero`, `.cst-section__title`).
+### CSS architecture
 
----
-
-## 12. CSS — Variables and Values
-
-- Use `:root` variables for all colors. Hardcoded hex values outside `:root` are not allowed.
-- `padding` is for inner spacing (between content and its own edge); `margin` is for outer spacing (between sibling elements).
-- Use `:root` spacing variables for structural values of layout elements (padding, margin, gap). Small fine-tuning values (e.g., a `4px` gap) do not require variables.
-- Use `rem` for font sizes (not `px`). Do not use `clamp()` for font sizes; switch values at breakpoints instead.
-- Use unitless numbers for `line-height` (e.g., `1.5`, not `30px`).
-- If a property is declared twice within the same selector, delete the first (overridden) declaration.
-- Do not use `!important`.
-
----
-
-## 13. CSS — Architecture
-
-- Place global element rules (`img`, `ul`, `body`, etc.) in `base.css`. Do not write them in `page.css`.
-- Scope all global element rules in `base.css` under `.cst-page` (e.g., `a { }` → `.cst-page a { }`). This prevents styles from leaking into the header, footer, and other areas managed by external systems.
-- In `page.css`, if the styled element is one of `<a>` / `<ul>` / `<ol>` / `<img>` / `<picture>` / `<video>` / `<em>` / `<i>` / `<cite>`, a class alone (specificity 10) loses to `base.css`'s `.cst-page element` selector (specificity 11). Use the `.cst-page .your-class` form (specificity 20) instead:
+- Scope every global element rule in `base.css` under `.cst-page`
+  (e.g. `a { }` → `.cst-page a { }`). This prevents styles from leaking into
+  header/footer regions managed by external systems.
+- In `page.css`, class-alone selectors (specificity 10) lose to
+  `.cst-page element` in `base.css` (specificity 11). Use `.cst-page .your-class`
+  (specificity 20) to override:
   ```css
-  /* ❌ Specificity 10 — loses to base.css's 11 */
+  /* ❌ specificity 10 — loses to base.css's 11 */
   .cst-my-link { color: red; }
 
-  /* ✅ Specificity 20 — beats base.css's 11 */
+  /* ✅ specificity 20 — beats base.css's 11 */
   .cst-page .cst-my-link { color: red; }
   ```
-- Do not duplicate rules for the same selector. Delete the overridden one.
-- In media query overrides, write only the properties that actually change. Do not repeat the entire ruleset.
-- Add `scroll-margin-top` to `<div id="...">` elements used as TOC anchors to prevent them from being hidden behind a fixed header:
+- `scroll-margin-top` for TOC anchors applies to `div[id]`, not `section[id]`
+  (since `<section>` is unavailable):
   ```css
   div[id] {
-    scroll-margin-top: 70px; /* Adjust to the actual header height */
+    scroll-margin-top: 70px; /* match the actual fixed-header height */
   }
   ```
-- Use lowercase element names in CSS selectors (XHTML/XML is case-sensitive).
-
----
-
-## 14. CSS — Code Quality
-
-- Do not leave commented-out CSS. Delete unnecessary rules completely.
-- Revise or delete comments that no longer match the code.
 
 ---
 

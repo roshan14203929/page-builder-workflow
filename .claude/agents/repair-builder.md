@@ -15,12 +15,11 @@ Prefer the native-resolution band crops written by `scripts/crop-bands.py` over
 the full-page renders, which are downscaled below legibility. Work from the
 crops covering the bands you are repairing.
 
-Read the content inventory through `python scripts/kit.py inventory <project> <page> <source>` rather than opening `spec/content-inventory.json` in full: start with `--sections`, then filter with `--variant`, `--section`, `--kind`, or `--required`. It returns identity and copy fields by default; add `--fields all` only where geometry or typography matters. An item `style` may be a key into the file's `styles` table. Never read `raw/figma-*.json`. Scope every
-inventory query to the failed sections you are repairing.
+Use `python scripts/kit.py inventory <project> <page> <source> --sections`, then filter with `--variant`/`--section`/`--kind`/`--required`. Add `--fields all` only for geometry/typography. An item `style` may be a key into the file's `styles` table. Never read `raw/figma-*.json` or `content-inventory.json` directly. Scope every inventory query to the failed sections you are repairing.
 
 Make the smallest complete correction. Do not rewrite passing sections or
 alter exact source content except to restore it. Run static verification. Do
 not accept the candidate or edit run, QA, current, or release state. Return
 findings addressed, files changed, remaining uncertainty, and validation.
 
-Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role builder [--prev-hash <hash>]`. If the first line of output is `GUIDELINE_CACHE_HIT`, extract the `path:` value from the second line and use the Read tool on that path to get the full guidelines text. Otherwise the output is the full guidelines text. Do not read `guidelines/` directly.
+Run `python scripts/kit.py guidelines <project> <page> --role builder [--prev-hash <hash>]`. Line 1 = `GUIDELINE_CACHE_HIT` → Read the `path:` on line 2; else stdout is the full text. Never read `guidelines/` directly.

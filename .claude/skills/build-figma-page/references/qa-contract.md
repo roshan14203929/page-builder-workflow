@@ -81,11 +81,12 @@ candidate. Accepting a new candidate clears old QA, making stale review reuse
 impossible. Run `qa-summary` after all four have returned. Missing, stale, or
 unavailable checks fail the summary.
 
-UI and accessibility objects must include the validated
-`webInterfaceGuidelines` source URL, fetch status, revision when available, and
-content SHA-256. A failed fetch uses a null hash and is non-blocking by itself;
-the base review remains mandatory. This provenance is copied into releases with
-the rest of the authoritative QA evidence.
+UI and accessibility QA objects must include a `webInterfaceGuidelines`
+provenance object (64-char lowercase SHA-256). The full schema and null-handling
+rules are in `artifact-contract.md §QA object`. A failed fetch uses
+`fetchStatus: "FAILED"` with a null hash and is non-blocking on its own; the
+base review remains mandatory. The provenance is copied into releases with the
+rest of the authoritative QA evidence.
 
 After the four checks pass, the release verifier returns a JSON verdict with
 `status: "READY"`, `runId`, `candidateId`, `checkedAt`, and `summary`. Record it

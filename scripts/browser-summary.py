@@ -47,9 +47,10 @@ def main() -> int:
     }
     output = Path(str(args["output"])).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    rendered = json.dumps(summary, indent=2) + "\n"
-    output.write_text(rendered, encoding="utf-8")
-    sys.stdout.write(rendered)
+    pretty = json.dumps(summary, indent=2) + "\n"
+    compact = json.dumps(summary, separators=(",", ":")) + "\n"
+    output.write_text(pretty, encoding="utf-8")
+    sys.stdout.write(compact)
     return 0 if summary["status"] == "PASS" else 2
 
 

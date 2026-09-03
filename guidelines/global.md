@@ -100,24 +100,11 @@ Write the resolved source list and SHA-256 hash into every run.
 - Verify hover, focus-visible, active, disabled, menu, modal, and form states
   when those states exist.
 
-## Accessibility and technical quality
+## Accessibility and technical quality gates
 
 - Use semantic landmarks and exactly one page-level `h1`.
 - Preserve logical heading order and keyboard operation.
 - Give controls accessible names and inputs associated labels.
-- Provide useful alternative text for informative images and empty alt text for
-  decorative images.
-- Describe what an informative image shows, not its location or implementation
-  role. For PNG content figures, use the nearest preceding `h3` or `h4` as the
-  basis for the alternative text and verify that the result describes the
-  figure accurately.
-- Keep every `aria-label` in the page language.
-- Never remove a focus outline without providing an equally visible
-  replacement. Use `:focus-visible` for keyboard focus styles; do not combine
-  `:hover` and `:focus` into one rule because they represent different input
-  methods.
-- Respect reduced-motion preferences and maintain visible focus indicators.
-- Reserve media dimensions and prevent avoidable layout shifts.
 - Reject broken local assets, console errors, failed local network requests,
   horizontal overflow, invalid document structure, and placeholder content.
 
@@ -128,48 +115,19 @@ Write the resolved source list and SHA-256 hash into every run.
   Never run a formatter over an entire delivery template.
 - When available, rely on Prettier and `html-validate` for formatting, tag
   closing, doctype, charset, attribute quoting, and void-element validation;
-  apply the rules below to requirements those tools do not cover.
+  apply the platform coding-rules file to requirements those tools do not cover.
 - When XHTML is explicitly required, convert the completed HTML only as the
   final local step and manually compare the result with the project's
   XHTML-versus-HTML reference. Do not introduce an external model API for the
   conversion.
-- Set the root `html[lang]` to the page language.
-- Provide a unique, descriptive `title` of 45–65 characters and align it with
-  the page `h1` content.
-- Include exactly one `main` element containing the primary page content.
-- Put a `.container` on a `div` inside a `section`, never on the `section`
-  itself.
 
-## Semantic HTML hygiene
+## Coding standards
 
-- Use heading elements such as `h2` and `h3` for section titles; never style a
-  `div` to act as a heading.
-- Use exactly one `h1` and do not skip heading levels.
-- Choose elements for semantic meaning rather than visual appearance. Use
-  `strong` and `em` when emphasis is meaningful instead of `b` and `i`.
-- Do not create spacer `div` elements; use CSS margin or padding.
-- Do not leave empty elements, empty `class` attributes, or whitespace-only
-  `class` attributes.
-- Do not use inline `style` attributes. Move declarations into CSS classes.
-- Delete commented-out HTML. If content is intentionally excluded, retain only
-  a short explanatory HTML comment stating why instead of the full block.
-
-## Image markup and loading
-
-- Give every `img` explicit intrinsic numeric `width` and `height` attributes
-  to reserve its aspect ratio and prevent cumulative layout shift. Use CSS for
-  responsive sizing such as `width: 100%` and `height: auto`.
-- Do not use `picture` or `source` for delivery content images. Wrap a single
-  `img` in an `.img-wrapper` element and express supported responsive or HiDPI
-  variants with `srcset` on that image.
-- Use `loading="lazy"` for below-the-fold images. Use `loading="eager"` and
-  `fetchpriority="high"` for the LCP or hero image.
-- For retina assets, provide explicit `1x` and `2x` `srcset` candidates while
-  retaining `src`, alternative text, loading mode, width, and height.
-- Follow the provided local font templates. If an explicitly authorized
-  template already uses Google Fonts, place preconnect links for
-  `fonts.googleapis.com` and `fonts.gstatic.com` before its stylesheet link;
-  do not introduce remote fonts when the workflow requires local-only output.
+HTML structure, semantic hygiene, image markup, accessibility, and font-loading
+rules live in the platform coding-rules file — `html-coding-rules.md` for
+HTML5 or `xhtml-coding-rules.md` for MediChannel. `kit.py guidelines --role
+<role>` delivers the right file alongside the role's own guidelines. Do not
+duplicate those rules here.
 
 ## Release
 

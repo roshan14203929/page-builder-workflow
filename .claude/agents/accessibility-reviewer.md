@@ -24,4 +24,4 @@ object; do not create another QA kind. Include `webInterfaceGuidelines`
 provenance with the source URL, fetch status, revision when available, and
 fetched-content SHA-256 (or a null hash after a failed fetch).
 
-Read the effective guidelines with `python scripts/kit.py guidelines <project> <page> --role accessibility [--prev-hash <hash>]`. If the first line of output is `GUIDELINE_CACHE_HIT`, extract the `path:` value from the second line and use the Read tool on that path to get the full guidelines text. Otherwise the output is the full guidelines text. Do not read `guidelines/` directly.
+Run `python scripts/kit.py guidelines <project> <page> --role accessibility [--prev-hash <hash>]`. Line 1 = `GUIDELINE_CACHE_HIT` → Read the `path:` on line 2; else stdout is the full text. Never read `guidelines/` directly.

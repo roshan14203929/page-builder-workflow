@@ -161,9 +161,10 @@ def main() -> int:
         files = []
     report = {"kind": "technical", "status": "FAIL" if findings else "PASS", "checkedAt": now(), "summary": f"{len(findings)} technical or content-integrity issue(s) found." if findings else "Static output checks passed.", "findings": findings, "files": files}
     output.parent.mkdir(parents=True, exist_ok=True)
-    rendered = json.dumps(report, indent=2) + "\n"
-    output.write_text(rendered, encoding="utf-8")
-    sys.stdout.write(rendered)
+    pretty = json.dumps(report, indent=2) + "\n"
+    compact = json.dumps(report, separators=(",", ":")) + "\n"
+    output.write_text(pretty, encoding="utf-8")
+    sys.stdout.write(compact)
     return 0 if report["status"] == "PASS" else 2
 
 

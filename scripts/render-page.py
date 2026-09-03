@@ -135,9 +135,10 @@ async def _render(args: dict[str, str]) -> int:
                 await browser.close()
         structural_failures = diagnostics["h1Count"] != 1 or diagnostics["emptyLinks"] > 0 or diagnostics["unnamedButtons"] > 0 or diagnostics["unlabeledInputs"] > 0 or diagnostics["imagesMissingAlt"] > 0 or bool(diagnostics["duplicateIds"])
         report = {"status": "FAIL" if console_errors or failed_requests or diagnostics["scrollWidth"] > diagnostics["clientWidth"] + 1 or structural_failures else "PASS", "checkedAt": now(), "viewport": {"width": width, "height": height, "scale": scale}, "output": str(output), "diagnostics": diagnostics, "consoleErrors": console_errors, "failedRequests": failed_requests}
-        rendered = json.dumps(report, indent=2) + "\n"
-        Path(f"{output}.json").write_text(rendered, encoding="utf-8")
-        sys.stdout.write(rendered)
+        pretty = json.dumps(report, indent=2) + "\n"
+        compact = json.dumps(report, separators=(",", ":")) + "\n"
+        Path(f"{output}.json").write_text(pretty, encoding="utf-8")
+        sys.stdout.write(compact)
         return 0 if report["status"] == "PASS" else 2
     finally:
         server.shutdown()
