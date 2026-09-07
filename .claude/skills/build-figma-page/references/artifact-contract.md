@@ -37,6 +37,7 @@ projects/<project>/
       qa/technical.json
       qa/summary.json
       qa/release-verifier.json
+      qa/repair-round-*.json
     current/
       images/*
       index.html
@@ -137,12 +138,6 @@ Every QA agent returns:
   "candidateId": "candidate-001",
   "checkedAt": "ISO-8601",
   "summary": "Short evidence-based result.",
-  "webInterfaceGuidelines": {
-    "sourceUrl": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md",
-    "fetchStatus": "FETCHED",
-    "revision": null,
-    "sha256": "64-character lowercase SHA-256"
-  },
   "findings": []
 }
 ```
@@ -153,10 +148,8 @@ require `id`, `severity`, and `message`; add `section`, `evidence`, and
 `suggestedFix` when available. A finding tied to a vertical region also carries
 `bands: { "start": <px>, "end": <px> }` in reference-image coordinates, so the
 orchestrator can group findings by locality mechanically instead of parsing
-prose. Valid statuses are `PASS`, `FAIL`, and `UNAVAILABLE`. Valid severities are `critical`, `high`, `medium`, and `low`.
-The `webInterfaceGuidelines` object is required only for UI and accessibility
-checks. A failed fetch records `fetchStatus: "FAILED"` and a null `sha256`; it
-does not replace the repository's base review.
+prose. Valid statuses are `PASS`, `FAIL`, and `UNAVAILABLE`. Valid severities
+are `critical`, `high`, `medium`, and `low`.
 
 ## Deterministic evidence locations
 

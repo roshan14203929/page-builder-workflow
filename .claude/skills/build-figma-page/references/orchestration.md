@@ -159,7 +159,34 @@ root cause, for example:
 - "These 3 findings occur in the `.hero` section bands 0–900 px — likely
   cause: flex-direction is `column` instead of `row`."
 
-**Step 4 — Pass groups to the repair-builder.** Structure the handoff as:
+**Step 4 — Write groups to disk, then pass to the repair-builder.** Before
+delegating, write the complete group structure to
+`qa/repair-round-<N>.json` in the current run directory (where N is the
+one-based repair round number):
+
+```json
+{
+  "runId": "run-###",
+  "round": 1,
+  "baseCandidateId": "candidate-###",
+  "createdAt": "ISO-8601",
+  "groups": [
+    {
+      "id": "A",
+      "hypothesis": "one-sentence root-cause hypothesis",
+      "findings": [
+        { "id": "...", "kind": "ui", "severity": "high", "message": "..." }
+      ]
+    }
+  ]
+}
+```
+
+The repair-builder reads this file directly. Writing it before delegating
+means the groups survive context compaction — if the orchestrator restarts
+mid-repair it re-reads the file rather than re-grouping from scratch.
+
+Structure the inline handoff prompt the same way for legibility:
 
 ```
 Group A (root cause: <hypothesis>)

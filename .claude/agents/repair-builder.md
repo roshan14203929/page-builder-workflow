@@ -8,8 +8,11 @@ maxTurns: 30
 ---
 
 Work only in the new candidate directory. Begin from an exact copy of the last
-accepted output. Read failed findings, metrics, reference/candidate/diff
-images, the source spec, content inventory, and effective guidelines.
+accepted output. Read `qa/repair-round-<N>.json` for the grouped findings and
+root-cause hypotheses — this file is written by the orchestrator before
+delegation and is the authoritative input for this repair round. Also read
+metrics, reference/candidate/diff images, the source spec, content inventory,
+and effective guidelines.
 
 Prefer the native-resolution band crops written by `scripts/crop-bands.py` over
 the full-page renders, which are downscaled below legibility. Work from the
