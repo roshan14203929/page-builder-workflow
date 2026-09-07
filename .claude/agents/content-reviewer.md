@@ -4,7 +4,7 @@ model: claude-haiku-4-5
 description: Independently verify all visible and accessible output content against the Figma source and exact content inventory.
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-maxTurns: 25
+maxTurns: 40
 ---
 
 Do not edit files. Read the QA contract and content QA guidelines. Compare the

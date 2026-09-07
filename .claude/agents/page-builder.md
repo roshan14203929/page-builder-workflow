@@ -4,7 +4,7 @@ model: claude-opus-5
 description: Build one isolated semantic and responsive HTML/CSS candidate from a normalized Figma source and effective guidelines.
 tools: Read, Write, Edit, Bash, Glob, Grep
 permissionMode: acceptEdits
-maxTurns: 50
+maxTurns: 20
 ---
 
 Work only in the candidate directory supplied by the orchestrator. Read the
@@ -13,20 +13,29 @@ guidelines before editing.
 
 ## Pre-build analysis (mandatory — do this before writing any HTML or CSS)
 
-1. Run `python scripts/kit.py inventory <project> <page> <source> --sections`
+1. **Visual scan first.** Before running any script, read the full-page Figma
+   frame top to bottom. Identify: overall layout type (single-column,
+   two-column, mixed), the above-the-fold zone, rough section count, and where
+   PC and SP variants diverge (column collapse, image reposition, text restack).
+   Note these differences now — responsive CSS is written in one pass, not
+   patched after.
+
+2. Run `python scripts/kit.py inventory <project> <page> <source> --sections`
    to get the full section map: section IDs, item counts, content kinds, and
    which variants each section appears in.
 
-2. Read `spec/spec.json` — specifically the `tokens` block (colors, typography,
+3. Read `spec/spec.json` — specifically the `tokens` block (colors, typography,
    spacing, radii, shadows, components) to understand the design token system
    and what Figma component types appear on the page.
 
-3. Identify repeated visual patterns: which sections share the same Figma
+4. Identify repeated visual patterns: which sections share the same Figma
    component types (from `tokens.components`), which button/card/tag/link
    styles repeat across sections, and which layout structures (grid columns,
-   flex rows) recur.
+   flex rows) recur. Section spacing and internal spacing within sections are
+   consistent — read values from the source and apply them uniformly. Hero and
+   footer zones follow their own spacing rhythm; treat them as separate cases.
 
-4. From this survey, define the CSS component vocabulary — the shared class
+5. From this survey, define the CSS component vocabulary — the shared class
    names (e.g. `.btn`, `.card`, `.tag`, `.section-heading`) that will be
    reused across multiple sections. Write this list as a short comment block
    at the top of `page.css` before any selectors, for example:
@@ -35,8 +44,10 @@ guidelines before editing.
       .card, .card__title, .card__body,
       .tag, .section-heading */
    ```
+   Once a class is in the vocabulary, apply it immediately when the same
+   visual cue reappears — do not re-analyze an already-understood pattern.
 
-5. Only after this analysis, build section by section. Use
+6. Only after this analysis, build section by section. Use
    `python scripts/kit.py inventory <project> <page> <source> --tree
    --section <id> --variant <label>` to get a DOM-scaffolded view of that
    section (sections → groups → items) rather than a flat list. Always pass
@@ -45,7 +56,10 @@ guidelines before editing.
    groups are real Figma structure you should mirror in the DOM; `fallback`
    means the section had none and you must infer nesting from geometry. Use
    `--component <name>` to cross-reference every section sharing a component
-   type.
+   type. For each section, write the HTML skeleton first, then CSS in this
+   order: layout (display, grid/flex, widths) → typography (font, size,
+   line-height) → spacing (padding, margin, gap) → color and visual polish.
+   Complete one section before moving to the next.
 
 Use `python scripts/kit.py inventory <project> <page> <source> --sections`, then filter with `--variant`/`--section`/`--kind`/`--required`. Add `--fields all` only for geometry/typography. An item `style` may be a key into the file's `styles` table. Never read `raw/figma-*.json` or `content-inventory.json` directly.
 

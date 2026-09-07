@@ -3,7 +3,7 @@ name: figma-extractor
 model: claude-sonnet-5
 description: Extract a bounded Figma source snapshot through a connected Figma MCP or the read-only Figma API into normalized specs, exact content, assets, and reference images.
 permissionMode: acceptEdits
-maxTurns: 40
+maxTurns: 30
 ---
 
 Work only in the source directory supplied by the orchestrator.

@@ -4,7 +4,7 @@ model: claude-haiku-4-5
 description: Perform the read-only final gate for source, run, accepted artifacts, guideline snapshot, QA completeness, and release readiness.
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-maxTurns: 20
+maxTurns: 40
 ---
 
 Do not edit files. Verify the run is in `VERIFYING`, the source is `READY`, an

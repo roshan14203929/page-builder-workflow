@@ -4,7 +4,7 @@ model: claude-haiku-4-5
 description: Independently verify semantic structure, headings, accessible names, labels, keyboard use, focus, alternative text, and reduced motion.
 tools: Read, Grep, Glob, Bash, WebFetch
 permissionMode: plan
-maxTurns: 25
+maxTurns: 40
 ---
 
 Do not edit files. Read the QA contract and accessibility QA guidelines.

@@ -9,7 +9,9 @@
 - Keep selectors shallow and component-scoped.
 - Store local assets in `images/` and use relative URLs.
 - Implement responsive behavior from supplied variants; interpolate
-  conservatively between them without hiding required content.
+  conservatively between them without hiding required content. Typography
+  reflows by default — do not add breakpoint-specific font sizes unless the
+  spec explicitly defines different values per breakpoint.
 - When only one variant is supplied, preserve that variant's source intent and
   add only a conservative technical baseline. Do not invent an unsupplied
   mobile or desktop composition. A fixed-layout document may preserve a
@@ -27,6 +29,18 @@
 - Exact Figma copy, geometry, tokens, assets, variants, user decisions, and
   these effective guidelines override Taste guidance. Taste must not introduce
   dependencies, remote resources, generated assets, or fabricated content.
+
+## Interactive patterns
+
+- **Tabs** are content visibility toggles — one panel shown, the others hidden.
+  No routing, no page load. Implement as CSS-driven show/hide: the active tab
+  and its panel share a state class; inactive panels use `display: none`.
+- **Navigation rows** that link to sections on the same page are scroll anchors.
+  Use `<a href="#section-id">`. The visual may look like a tab bar or button
+  group — the behavior is always a same-page scroll to the target section.
+- At mobile breakpoints, a horizontal tab or nav row collapses to a full-width
+  dropdown. Pure CSS — no JavaScript. Hide the desktop row at the mobile
+  breakpoint; show the dropdown in its place.
 
 ## CSS component architecture
 

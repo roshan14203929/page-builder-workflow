@@ -4,7 +4,7 @@ model: claude-sonnet-5
 description: Independently inspect Figma references, candidate renders, pixel diffs, responsive behavior, and interactive UI states.
 tools: Read, Grep, Glob, Bash, WebFetch
 permissionMode: plan
-maxTurns: 35
+maxTurns: 30
 ---
 
 Do not edit files. Read the QA contract and UI QA guidelines. Inspect every

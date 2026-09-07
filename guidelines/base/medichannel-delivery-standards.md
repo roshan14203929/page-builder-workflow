@@ -1,62 +1,48 @@
 # MediChannel Delivery Coding Standards
 
-All coding shall be done with high readability, taking maintainability and reusability into account.
+All coding shall prioritize readability, maintainability, and reusability.
 
 ---
 
-## 4-1. HTML Coding
+## HTML Coding
 
-### General Coding Rules
+### General Rules
 
-All coding shall comply with web standards specifications.
+- HTML = structure only. Styles → CSS. No inline `style` attributes.
+- CSS and JS → external files, loaded after `desktop.css` and `script.css` within the designated template comment markers.
+- All tag names lowercase. No omitted closing tags (except void elements).
+- No spacer images or layout line breaks. No `<frame>`.
+- Paths → document-root-relative (e.g. `/img/foo.jpg`), not relative (`../`).
 
-- HTML shall only describe document structure (text, headings, tables, etc.); display styles (typeface, size, color, etc.) shall be separated using CSS.
-- CSS and JavaScript shall be specified as external reference files.
-- All HTML tag names shall be written in lowercase.
-- Closing tags shall not be omitted, except for void elements.
-- Spacer images and line breaks used for layout purposes shall not be used.
-- The `<frame>` element shall not be used. To frame a portion of a page, use the `<iframe>` element.
-- Do not specify styles directly on elements using the `style` attribute.
-- Paths for images and links shall be written as document-root-relative paths starting with `"/"`, not file-relative paths such as `"../"`.
-- Any externalized CSS or JavaScript files shall be loaded after the existing `desktop.css` and `script.css`, within the designated Japanese comment markers in the template.
+### File Extensions
 
-### ② File Extensions
+- All files must have extensions. HTML → `.html`. Unify if mixed.
 
-- All file names must include a file extension.
-- If files of the same type are referenced with multiple extensions, unify them.
-- HTML files shall use the `.html` extension.
+### Image Formats
 
-### ③ Image Formats
+- Allowed: GIF (`.gif`), JPEG (`.jpg`), PNG (`.png`). SVG allowed on content pages.
+- WebP **not permitted**.
+- Resolution: 72 dpi. `&` in URLs → `&amp;`. Minimize file size while maintaining quality.
 
-- Acceptable image formats are GIF, JPEG, and PNG, with extensions `.gif`, `.jpg`, and `.png` respectively.
-- SVG is permitted on content pages.
-- WebP is **not** permitted.
-- Image resolution shall be 72 dpi.
-- All `&` characters in image URLs must be escaped as `&amp;`.
-- File sizes should be minimized as much as possible while maintaining quality, in consideration of low-bandwidth environments.
+### File Size
 
-### ④ File Size
+Total per page (including images): **≤ 800 KB**.
 
-The total file size per page, including image files, shall be within 800 KB.
+### Template
 
-### ⑤ Template Usage
+Use the distributed `MediChannel_template`.
 
-The distributed template (MediChannel_template) shall be used for production.
+### Unnecessary Files
 
-### ⑥ Removal of Unnecessary Files
+Delete before delivery: `Thumb.db`, `.DS_Store`, files starting with `._`, `_notes` folder.
 
-Unnecessary files not used on the site (such as those listed below) shall be deleted and not included in the deliverable files.
-(Thumb.db / .DS_Store / Files starting with "._" / _notes folder)
+### Document Type
 
-### ⑦ Document Type Declaration
+**XHTML 1.0 Strict.** Not HTML5.
 
-The document type for MediChannel is XHTML 1.0 Strict. All coding shall conform to this document type.
-Note: This is NOT HTML5.
+### Editable Area
 
-### ⑧ Editable Area
-
-HTML code shall only be written within the area directly below the comment "Body editable area starts here" and above "Body editable area ends here". Do not add HTML code outside this area.
-
+Write HTML only between:
 ```html
 <!-- Body editable area starts here -->
 
@@ -65,51 +51,34 @@ Write content here
 <!-- Body editable area ends here -->
 ```
 
-### ⑨ Accessibility
+### Accessibility
 
-From an accessibility perspective, at minimum the following shall be observed:
+- All `<img>` → meaningful `alt` text describing the image content.
+- No whitespace for letter-spacing adjustment.
+- Platform-dependent characters → character entity references (e.g. ①, ㈱, Ⅲ).
 
-- All images shall have appropriate alternative text (`alt`) that specifically describes the image content.
-- Whitespace characters shall not be used to adjust letter spacing.
-- Platform-dependent characters must use character entity references. Examples: ①, ㈱, ㊤, Ⅲ, etc.
+### Meta Tags & Page Title
 
-### ⑩ Meta Tags and Page Title
+- `<meta name="keywords">` → present, `content=""`.
+- `<meta name="description">` → omit on login-required pages.
+- `<title>` format: `[Page Name] | [Site Suffix]` (e.g. `製品情報 | MediChannel`).
+- `<title>` must match `<h1>`.
 
-- `<meta name="keywords">` must be present but left blank (`content=""`).
-- `<meta name="description">` must be omitted on pages that require login.
-- Page title format: `[Page Name] | [Site Suffix]` (e.g. `製品情報 | MediChannel`).
-- The `<title>` value must match the page's `<h1>` content.
+### Validation
 
-### ⑪ Validation
-
-Validation must always be performed. Minor mistakes such as missing closing tags shall not occur, or measures to prevent them shall be in place.
+Always validate. Missing closing tags are not acceptable.
 
 ---
 
-## 4-2. CSS Coding
+## CSS Coding
 
-Use single-selector declarations as the basis, and keep specificity as low as possible.
-Also, avoid element selectors where possible to minimize situations where HTML changes require CSS changes.
+Use single-selector declarations. Keep specificity low. Avoid element selectors where possible.
 
-### CSS Format
-
-- CSS declaration blocks must always be indented.
-- Place one half-width space between the selector and `{`.
-- Write the property followed immediately by `:`, then one half-width space, then the value.
-- All declaration blocks must end with `;`.
-- When listing multiple selectors separated by commas, place each selector on its own line.
-- Aim for simple, clean code and avoid writing unused or non-functional styles.
+### Format
 
 ```css
 /* Not recommended */
 .example {color: #FFFFFF; text-align: center;}
-
-.example-a, example-b, example-c {
-  margin-right:10px;
-  font-weight:bold;
-  margin:10px 0;
-}
-
 
 /* Recommended */
 .example {
@@ -125,30 +94,20 @@ Also, avoid element selectors where possible to minimize situations where HTML c
 }
 ```
 
-### Value Specification
+### Values
 
-- Use shorthand notation as much as possible.
-- Omit units for properties with a value of `0`. Example: `margin: 0;`
-- Units should also be omitted for the `line-height` property in principle.
-- **Use `px` for all size values** (font-size, dimensions, spacing, borders). Do not use `rem` or `em` — the page is embedded in a client template whose root font-size is outside our control.
+- Use shorthand. Omit units for `0` values. `line-height` → unitless.
+- **All sizes in `px`** (font-size, dimensions, spacing, borders). No `rem` or `em` — root font-size is outside our control.
 
-### base.css Structure (overrides global builder defaults)
-
-The following rules apply to MediChannel and override the global `builder.md` guidelines:
+### base.css Rules (overrides global builder defaults)
 
 - Define all color, typography, and spacing tokens as `:root` CSS custom properties in `base.css`.
-  Include `--font-size-*` and `--line-height-*` variables alongside color tokens.
-- Use **semantic color variable names** (`--color-primary`, `--color-secondary`, `--color-bg`, `--color-text`,
-  `--color-text-muted`, `--color-border`, `--color-bg-light`, `--color-tab-bar`) that match production naming.
-- Set `max-width: 960px; margin: 0 auto;` on `.cst-page` for content containment — never `min-width`.
-- **Never write bare unscoped element resets** such as `* { margin: 0; padding: 0; }`. All element resets
-  must be scoped to `.cst-page` (e.g. `.cst-page *`, `.cst-page ul`, `.cst-page img`). An unscoped reset
-  bleeds into the client template and causes `base.css` to override `page.css` component styles.
-- The `scroll-margin-top` rule for anchor targets must be placed on `div[id]` (not on individual components)
-  and must equal the fixed header height (typically `54px`).
+- Use **semantic color names** (`--color-primary`, `--color-bg`, `--color-text`, etc.).
+- `.cst-page` → `max-width: 960px; margin: 0 auto;`. Never `min-width`.
+- **No bare unscoped resets** (`* { margin: 0; padding: 0; }`). Scope all resets to `.cst-page` (e.g. `.cst-page *`, `.cst-page ul`).
+- `scroll-margin-top` for anchor targets → on `div[id]`, equal to fixed header height (typically `54px`).
 
 ```css
-/* Correct `:root` token structure for MediChannel */
 :root {
   --color-white: #ffffff;
   --color-black: #000000;
@@ -173,48 +132,40 @@ The following rules apply to MediChannel and override the global `builder.md` gu
 }
 ```
 
-### CSS3 Selectors and Properties
+### CSS3
 
-CSS3 usage is permitted. However, if display issues or accessibility problems are expected in legacy browsers, alternative solutions must be prepared.
+Permitted. Prepare fallbacks if legacy browser issues are expected.
 
 ### Validation
 
-Validation must always be performed. Minor mistakes such as spelling errors or unnecessary styles shall not occur, or measures to prevent them shall be in place.
+Always validate. No spelling errors or unnecessary styles.
 
 ---
 
-## 4-3. JavaScript Coding
-
-JavaScript usage shall give full consideration to performance.
+## JavaScript Coding
 
 ### Libraries
 
-MediChannel loads jQuery 1.8.3 by default; this shall be used.
-Loading other versions of jQuery or other libraries such as prototype.js is prohibited.
+MediChannel loads **jQuery 1.8.3** by default — use it. Do not load other versions or libraries (e.g. prototype.js).
 
 ### Plugins
 
-Plugin usage is permitted.
-However, as stated above, loading other library versions to run plugins is prohibited.
+Permitted, but no additional library versions to support them.
 
 ### Validation
 
-Validation must always be performed. Errors are not acceptable. (Code with errors may not be published.)
+Always validate. Errors are not acceptable (code with errors may not publish).
 
 ---
 
-## 4-4. QA Scope Boundary — Client-Managed Zones
+## QA Scope Boundary — Client-Managed Zones
 
-The following zones are owned and deployed by the client; they are **excluded from
-all QA checks and must never be edited** in any deliverable:
+The following are **excluded from all QA checks and must never be edited**:
 
 | Zone | Scope note |
 |------|------------|
-| **Site header** | Global navigation bar, logo, login controls |
-| **Breadcrumbs** | The `#breadcrumb` / `.breadcrumb` element and its links |
-| **Site footer** | Copyright notice, site-wide links, legal disclaimers |
+| **Site header** | Global nav, logo, login controls |
+| **Breadcrumbs** | `#breadcrumb` / `.breadcrumb` element and links |
+| **Site footer** | Copyright, site-wide links, legal disclaimers |
 
-Changes to these areas ripple across the entire site and are outside the
-India Creative Team's change control. If placeholder content (e.g. `/test.html`,
-empty `<span>`) is observed in the breadcrumb, note it as **INFO** for the
-client but do not raise it as a deliverable defect and do not attempt to fix it.
+If placeholder content (e.g. `/test.html`) appears in the breadcrumb, note as **INFO** for the client — do not raise as a defect or attempt to fix.
