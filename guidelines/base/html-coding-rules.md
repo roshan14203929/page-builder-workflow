@@ -102,6 +102,7 @@ For CSS and HTML font setup, use the provided templates. One rule applies regard
 
 - No inline `style="..."` attributes. Move all values to a CSS class. Inline styles override the stylesheet and force `!important` into media queries to compensate.
 - No commented-out HTML blocks. Delete unused code. If a section is intentionally excluded, leave a `<!-- TODO: reason -->` comment instead of the full block.
+- Do not use `href="javascript:void(0)"`. Use a `<button>` element for actions with no destination, or `href="#"` with `event.preventDefault()` when a link element is required.
 
 ---
 

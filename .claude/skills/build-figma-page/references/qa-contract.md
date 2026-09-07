@@ -39,10 +39,6 @@ responsive behavior at those widths.
 Numeric thresholds come from `guidelines/global.md`. A numeric pass does not
 override an obvious structural or content mismatch.
 
-Apply the project-local `web-design-guidelines` skill as specified in
-`design-skills.md`. Normalize its visual, responsive, interaction, and usability
-findings into the existing UI QA object.
-
 Use fixed-height screenshots (`--full-page false`) when Figma references have
 fixed viewport heights. Use full-page screenshots only when the reference was
 exported using the same full-page convention. Combine every per-viewport diff
@@ -62,10 +58,6 @@ Check landmarks, single `h1`, heading order, names, labels, alt text, keyboard
 operation, focus order and visibility, reduced motion, hidden content, and
 native semantics. Record user impact and selector evidence.
 
-Apply the accessibility-relevant portion of the project-local
-`web-design-guidelines` review and normalize those findings into the existing
-accessibility QA object.
-
 ## Technical
 
 Run static verification and browser diagnostics. Check broken local assets,
@@ -80,13 +72,6 @@ it with `qa-record`. The controller stamps the current run and accepted
 candidate. Accepting a new candidate clears old QA, making stale review reuse
 impossible. Run `qa-summary` after all four have returned. Missing, stale, or
 unavailable checks fail the summary.
-
-UI and accessibility QA objects must include a `webInterfaceGuidelines`
-provenance object (64-char lowercase SHA-256). The full schema and null-handling
-rules are in `artifact-contract.md §QA object`. A failed fetch uses
-`fetchStatus: "FAILED"` with a null hash and is non-blocking on its own; the
-base review remains mandatory. The provenance is copied into releases with the
-rest of the authoritative QA evidence.
 
 After the four checks pass, the release verifier returns a JSON verdict with
 `status: "READY"`, `runId`, `candidateId`, `checkedAt`, and `summary`. Record it

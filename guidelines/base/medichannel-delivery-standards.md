@@ -18,7 +18,7 @@ All coding shall comply with web standards specifications.
 - The `<frame>` element shall not be used. To frame a portion of a page, use the `<iframe>` element.
 - Do not specify styles directly on elements using the `style` attribute.
 - Paths for images and links shall be written as document-root-relative paths starting with `"/"`, not file-relative paths such as `"../"`.
-- Any externalized CSS or JavaScript files shall be loaded after the existing `desktop.css` and `script.css`.
+- Any externalized CSS or JavaScript files shall be loaded after the existing `desktop.css` and `script.css`, within the designated Japanese comment markers in the template.
 
 ### ② File Extensions
 
@@ -29,7 +29,10 @@ All coding shall comply with web standards specifications.
 ### ③ Image Formats
 
 - Acceptable image formats are GIF, JPEG, and PNG, with extensions `.gif`, `.jpg`, and `.png` respectively.
+- SVG is permitted on content pages.
+- WebP is **not** permitted.
 - Image resolution shall be 72 dpi.
+- All `&` characters in image URLs must be escaped as `&amp;`.
 - File sizes should be minimized as much as possible while maintaining quality, in consideration of low-bandwidth environments.
 
 ### ④ File Size
@@ -70,7 +73,14 @@ From an accessibility perspective, at minimum the following shall be observed:
 - Whitespace characters shall not be used to adjust letter spacing.
 - Platform-dependent characters must use character entity references. Examples: ①, ㈱, ㊤, Ⅲ, etc.
 
-### ⑩ Validation
+### ⑩ Meta Tags and Page Title
+
+- `<meta name="keywords">` must be present but left blank (`content=""`).
+- `<meta name="description">` must be omitted on pages that require login.
+- Page title format: `[Page Name] | [Site Suffix]` (e.g. `製品情報 | MediChannel`).
+- The `<title>` value must match the page's `<h1>` content.
+
+### ⑪ Validation
 
 Validation must always be performed. Minor mistakes such as missing closing tags shall not occur, or measures to prevent them shall be in place.
 

@@ -24,23 +24,16 @@ of reopening one.
    new source, it owns only that source directory. Require it to record
    `page.variantScope`; supplied frames define fidelity scope and missing
    counterparts are not inferred.
-2. Apply the routing rules in `design-skills.md` to the normalized source. Tell
-   the builder whether Design Taste is applicable and why.
-3. Create a run and a candidate. Invoke `page_builder` / `page-builder` alone.
-   When routed, explicitly invoke `design-taste-frontend` in its handoff. It
-   owns only that candidate directory.
-4. Run the structural check described below, then deterministic static
+2. Create a run and a candidate. Invoke `page_builder` / `page-builder` alone.
+   It owns only that candidate directory.
+3. Run the structural check described below, then deterministic static
    validation, browser rendering, and visual metrics.
-5. Accept or reject the candidate. Copying into `generated/` is performed by
+4. Accept or reject the candidate. Copying into `generated/` is performed by
    `candidate-result`, not by a reviewer.
-6. Fetch the Web Interface Guidelines source once for the run, then invoke
-   content, UI, accessibility, and technical reviewers. Pass that single
-   fetched document and its provenance to the UI and accessibility reviewers
-   as described in `design-skills.md`; they must not fetch it themselves.
-   Reuse the same fetch across repair rounds. Include `page.variantScope` in
-   each handoff so unsupplied widths remain diagnostic unless explicitly
-   required. They are
-   read-only and return one QA JSON object each. The main agent records them.
+5. Invoke content, UI, accessibility, and technical reviewers. Include
+   `page.variantScope` in each handoff so unsupplied widths remain diagnostic
+   unless explicitly required. They are read-only and return one QA JSON
+   object each. The main agent records them.
 ### Handoff ordering for QA reviewers
 
 Structure every reviewer handoff with stable content first and variable content
@@ -48,23 +41,22 @@ last. Prompt caching requires a stable prefix; a run ID or candidate path at the
 top of a handoff invalidates the cache on every run.
 
 Order:
-1. Web Interface Guidelines text + provenance (UI and accessibility reviewers only)
-2. Effective guidelines — `kit.py guidelines <project> <page> --role <role>`
-3. Source spec summary — `tokens` block from `spec/spec.json`
-4. Content inventory — `kit.py inventory` filtered to the relevant sections
-5. `page.variantScope`
+1. Effective guidelines — `kit.py guidelines <project> <page> --role <role>`
+2. Source spec summary — `tokens` block from `spec/spec.json`
+3. Content inventory — `kit.py inventory` filtered to the relevant sections
+4. `page.variantScope`
 ---
-6. Run ID, candidate ID, accepted candidate directory path
-7. Render, diff, crop, and QA artifact paths
-8. Candidate-specific metrics or prior grouped findings (repair rounds only)
+5. Run ID, candidate ID, accepted candidate directory path
+6. Render, diff, crop, and QA artifact paths
+7. Candidate-specific metrics or prior grouped findings (repair rounds only)
 
-Keep items 1–5 textually identical across successive runs on the same page so
+Keep items 1–4 textually identical across successive runs on the same page so
 the cached prefix carries over. Never put a run ID, timestamp, or path before
 the stable block.
 
-7. Invoke `release_verifier` / `release-verifier` after the summary passes and
+6. Invoke `release_verifier` / `release-verifier` after the summary passes and
    record its verdict with `release-check`.
-8. On failure, apply the repair grouping process below, then create a new
+7. On failure, apply the repair grouping process below, then create a new
    candidate with `--from-accepted` and invoke `repair_builder` /
    `repair-builder` with the grouped findings (including root-cause
    hypotheses), the current accepted output, reference evidence, and affected

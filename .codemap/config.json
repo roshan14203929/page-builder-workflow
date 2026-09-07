@@ -14,6 +14,7 @@
     "projects/*/events/**",
     "projects/*/guidelines/**",
     "projects/*/pages/**",
+    "projects/*/.guideline-cache/**",
     ".pytest_cache/**",
     "*.log"
   ],
@@ -39,7 +40,7 @@
       "layer": "Agent workflow",
       "description": "Orchestrates Figma extraction, candidate construction, independent QA, repair, and release.",
       "paths": [".claude/skills/build-figma-page/**"],
-      "dependencies": ["artifact-contracts", "frontend-design-skills", "governance", "host-adapters", "render-and-qa", "state-controller", "validation-and-tests"],
+      "dependencies": ["artifact-contracts", "governance", "host-adapters", "render-and-qa", "state-controller", "validation-and-tests"],
       "entryPoints": [".claude/skills/build-figma-page/SKILL.md"]
     },
     {
@@ -52,20 +53,11 @@
       "entryPoints": [".claude/skills/codemap/SKILL.md", ".claude/skills/codemap/scripts/codemap.py"]
     },
     {
-      "id": "frontend-design-skills",
-      "label": "Frontend design skills",
-      "layer": "Agent workflow",
-      "description": "Provides optional design-direction guidance and Vercel interface-review rules for matching frontend tasks.",
-      "paths": [".claude/skills/taste-skill/**", ".claude/skills/web-design-guidelines/**"],
-      "dependencies": ["governance"],
-      "entryPoints": [".claude/skills/taste-skill/SKILL.md", ".claude/skills/web-design-guidelines/SKILL.md"]
-    },
-    {
       "id": "host-adapters",
       "label": "Claude adapter",
       "layer": "Agent workflow",
       "description": "Configures Claude subagent roles and skills.",
-      "paths": [".claude/agents/**", ".claude/settings.json", ".claude/state/**"],
+      "paths": [".claude/agents/**", ".claude/settings.json", ".claude/settings.local.json", ".claude/state/**"],
       "dependencies": ["figma-workflow-skill"],
       "entryPoints": [".claude/settings.json"]
     },
@@ -74,7 +66,7 @@
       "label": "Lifecycle state controller",
       "layer": "Deterministic runtime",
       "description": "Creates and transitions projects, pages, sources, runs, candidates, QA records, and releases.",
-      "paths": ["scripts/kit.py", "scripts/log-agent-event.py"],
+      "paths": ["scripts/kit.py", "scripts/log-agent-event.py", "scripts/report-usage.py"],
       "dependencies": ["artifact-contracts", "governance"],
       "entryPoints": ["scripts/kit.py"]
     },
@@ -92,7 +84,7 @@
       "label": "Rendering and QA evidence",
       "layer": "Deterministic runtime",
       "description": "Serves and renders candidates, measures browser output, compares pixels, verifies accepted evidence, and generates the four human-reviewer QA DOCX deliverables (overview, design, content, coding).",
-      "paths": ["scripts/render-page.py", "scripts/serve.py", "scripts/browser-summary.py", "scripts/visual-diff.py", "scripts/visual-summary.py", "scripts/verify-output.py", "scripts/measure-footer.py", "scripts/crop-bands.py", "scripts/create-qa-docs.py", "qa-reports/**"],
+      "paths": ["scripts/render-page.py", "scripts/serve.py", "scripts/browser-summary.py", "scripts/visual-diff.py", "scripts/visual-summary.py", "scripts/verify-output.py", "scripts/measure-footer.py", "scripts/crop-bands.py", "scripts/crop-region.py", "scripts/create-qa-docs.py", "scripts/populate-qa-agency15-316.py", "qa-reports/**"],
       "dependencies": ["artifact-contracts", "state-controller"],
       "entryPoints": ["scripts/serve.py", "scripts/render-page.py", "scripts/verify-output.py", "scripts/create-qa-docs.py"]
     },
@@ -102,7 +94,7 @@
       "layer": "Verification",
       "description": "Checks repository integrity and exercises lifecycle invariants and mapping behavior.",
       "paths": ["scripts/validate-kit.py", "tests/**"],
-      "dependencies": ["artifact-contracts", "codemap-skill", "figma-workflow-skill", "frontend-design-skills", "host-adapters", "render-and-qa", "state-controller"],
+      "dependencies": ["artifact-contracts", "codemap-skill", "figma-workflow-skill", "host-adapters", "render-and-qa", "state-controller"],
       "entryPoints": ["scripts/validate-kit.py"]
     },
     {
