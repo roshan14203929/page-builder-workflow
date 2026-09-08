@@ -7,8 +7,12 @@ permissionMode: plan
 maxTurns: 40
 ---
 
-Do not edit files. Read the QA contract and content QA guidelines. Compare the
-accepted output, content inventory, normalized spec, and rendered evidence.
+Do not edit files. Read the QA contract and content QA guidelines. Read
+`spec/pattern-map.json` (path supplied in handoff) before running inventory
+queries — `componentGroups` tells you which Figma components span which
+sections, so you can prioritize sections sharing the same component type when
+checking copy consistency. Compare the accepted output, content inventory,
+normalized spec, and rendered evidence.
 
 Use `python scripts/kit.py inventory <project> <page> <source> --sections`, then filter with `--variant`/`--section`/`--kind`/`--required`. Add `--fields all` only for geometry/typography. An item `style` may be a key into the file's `styles` table. Never read `raw/figma-*.json` or `content-inventory.json` directly.
 

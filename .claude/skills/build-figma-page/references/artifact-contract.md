@@ -13,12 +13,14 @@ projects/<project>/
       raw/figma-*.json
       spec/spec.json
       spec/content-inventory.json
+      spec/pattern-map.json
       asset-manifest.json
       assets/*
       reference/*.png
     runs/run-###/
       run.json
       effective-guidelines.md
+      css-map.json
       candidates/candidate-###/
         candidate.json
         images/*
@@ -54,6 +56,29 @@ projects/<project>/
       qa/*
       release.json
 ```
+
+## Pattern map
+
+`spec/pattern-map.json` is a mechanical derivation of `spec.json`, generated
+by `kit.py spec-pattern-map` once after `source-ready`. It contains three
+arrays: `componentGroups` (one entry per Figma component in `tokens.components`,
+with its `figmaId`, `name`, `instanceCount`, and `sectionIds`),
+`sectionProfiles` (one entry per section with its `role`, `components` list,
+`layout` summary, and optional `background`), and `layoutGroups` (sections that
+share an identical component set, labeled for quick lookup). The file is
+immutable once written — a `READY` source's pattern-map must not be regenerated.
+Pass its path in the stable prefix of every agent handoff.
+
+## CSS map
+
+`runs/run-###/css-map.json` is written by the page-builder to the run directory
+after its pre-build analysis and before writing any HTML. It records one entry
+per CSS vocabulary class: `cssClass` (selector string), `figmaComponent` (name
+from `tokens.components`), `figmaId`, `sectionIds`, and `scope` (`"shared"` for
+classes used in multiple sections, `"local"` for single-section classes). The
+file persists for the lifetime of the run and is passed in the variable suffix
+of the repair-builder handoff. It is not deployable output and is not included
+in `generated/`, `current/`, or `releases/`.
 
 ## Source spec
 

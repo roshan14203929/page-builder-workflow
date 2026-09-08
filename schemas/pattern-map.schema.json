@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Figma structural pattern map",
+  "description": "Mechanically derived from spec.json by kit.py spec-pattern-map. Immutable once the source is READY.",
+  "type": "object",
+  "required": ["version", "sourceId", "generatedAt", "componentGroups", "sectionProfiles", "layoutGroups"],
+  "properties": {
+    "version": { "const": 1 },
+    "sourceId": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "componentGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["figmaId", "name", "instanceCount", "sectionIds"],
+        "properties": {
+          "figmaId": { "type": "string" },
+          "name": { "type": "string" },
+          "instanceCount": { "type": "integer", "minimum": 0 },
+          "sectionIds": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "sectionProfiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sectionId", "role", "components", "layout"],
+        "properties": {
+          "sectionId": { "type": "string" },
+          "role": { "type": "string" },
+          "components": { "type": "array", "items": { "type": "string" } },
+          "layout": {
+            "type": "object",
+            "properties": {
+              "direction": { "type": "string" },
+              "paddingX": { "type": "number" },
+              "paddingY": { "type": "number" }
+            }
+          },
+          "background": { "type": "string" }
+        }
+      }
+    },
+    "layoutGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "sectionIds", "sharedComponents"],
+        "properties": {
+          "label": { "type": "string" },
+          "sectionIds": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "sharedComponents": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

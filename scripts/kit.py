@@ -235,6 +235,30 @@ def compact(a,b,c):
   before=f.stat().st_size;v=read(f);wcompact(f,fn(v) if fn else v)
   res.append({'file':name,'bytesBefore':before,'bytesAfter':f.stat().st_size})
  return {'projectId':a,'pageId':b,'sourceId':c,'normalized':res}
+def patternmap(a,b,c):
+ d=specbase(a,b,c);f=d/'spec.json'
+ if not f.exists():bad(f'spec.json not found for source {c}.')
+ spec=read(f);comps=spec.get('tokens',{}).get('components',[]) or [];secs=spec.get('sections',[]) or []
+ cg=[];csmap={}
+ for e in comps:
+  nm=e.get('name','');sids=e.get('sectionIds',[]) or []
+  cg.append({'figmaId':e.get('id',''),'name':nm,'instanceCount':e.get('instanceCount',0),'sectionIds':sids});csmap[nm]=set(sids)
+ sp=[]
+ for s in secs:
+  sid=s.get('id','');sc=sorted(nm for nm,sids in csmap.items() if sid in sids)
+  lay={k:v for k,v in (s.get('layout') or {}).items() if k in ('direction','paddingX','paddingY')}
+  bg=(s.get('visual') or {}).get('background');prof={'sectionId':sid,'role':s.get('role',''),'components':sc,'layout':lay}
+  if bg is not None:prof['background']=bg
+  sp.append(prof)
+ grp={}
+ for prof in sp:
+  key=tuple(sorted(prof['components']))
+  if key not in grp:grp[key]=[]
+  grp[key].append(prof['sectionId'])
+ lg=[{'label':('-'.join(k).lower().replace('/','') or 'no-components'),'sectionIds':ids,'sharedComponents':list(k)} for k,ids in grp.items() if len(ids)>1]
+ out={'version':1,'sourceId':c,'generatedAt':now(),'componentGroups':cg,'sectionProfiles':sp,'layoutGroups':lg}
+ target=src(a,b,c)/'spec'/'pattern-map.json';write(target,out)
+ return {'sourceId':c,'path':str(target),'componentGroups':len(cg),'sectionProfiles':len(sp),'layoutGroups':len(lg)}
 def sourcedelta(a,b,c):
  s=read(src(a,b,c)/'source.json')
  if s.get('extractionMode')!='INCREMENTAL':return {'sourceId':c,'extractionMode':'FULL'}
@@ -508,6 +532,7 @@ def main():
  elif cmd=='guidelines':out=guidelines(p[0],p[1],o)
  elif cmd=='inventory':out=inventory(p[0],p[1],p[2],o)
  elif cmd=='spec-compact':out=compact(p[0],p[1],p[2])
+ elif cmd=='spec-pattern-map':out=patternmap(p[0],p[1],p[2])
  elif cmd=='source-delta':out=sourcedelta(p[0],p[1],p[2])
  elif cmd=='source-patch':out=patch(p[0],p[1],p[2],o)
  elif cmd=='new-run':out=newrun(p[0],p[1],o)

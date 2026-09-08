@@ -32,16 +32,31 @@ Read these references before acting:
 
 ## Inputs
 
-Require a project identifier, page identifier, and at least one Figma frame
-URL. Accept additional desktop, tablet, or mobile variant URLs when supplied.
-Use lowercase hyphenated identifiers. If the project or page is absent, create
-it with the state controller rather than manually creating directories.
+Before running any command or delegating any agent, confirm every required
+input. Collect all missing items in a single ask — do not prompt one field at a
+time.
 
-Confirm the delivery platform at intake — `medichannel` (XHTML 1.0 Strict) or
-`html5` (M3, CareNet) — and record it with `kit.py init-project --platform` or
-`kit.py set-platform`. The two rulesets are mutually exclusive and determine
-which coding standards every agent receives; `new-run` refuses to start without
-one. Ask the user if the platform is not evident from the ticket.
+**Required — ask if absent:**
+
+| Input | Format |
+|---|---|
+| Project identifier | lowercase hyphenated, e.g. `medichannel` |
+| Page identifier | lowercase hyphenated, e.g. `fsn-hes-article03` |
+| At least one Figma frame URL | full `https://www.figma.com/…` URL |
+| Delivery platform | `medichannel` (XHTML 1.0 Strict) or `html5` (M3, CareNet) |
+
+**Optional — accept if supplied, otherwise use the stated default:**
+
+| Input | Default | Notes |
+|---|---|---|
+| Additional variant URLs | none | desktop, tablet, or mobile |
+| Workflow mode | `balanced` | see §Workflow mode; do not ask unless the user indicates a preference |
+
+Once all required inputs are confirmed, use lowercase hyphenated identifiers
+throughout. If the project or page record is absent, create it with the state
+controller rather than creating directories manually. Record the platform with
+`kit.py init-project --platform` or `kit.py set-platform`; `new-run` refuses
+to start without one.
 
 Treat the supplied frames as the complete fidelity scope unless the user says
 otherwise. Infer each frame's role from explicit labels, frame names, width,
@@ -50,6 +65,34 @@ counterpart from the number of URLs alone. A single wide frame normally defines
 a desktop-only fidelity target. With related wide and narrow frames, normally
 classify the widest as desktop and the narrowest as mobile. Record confidence
 and evidence, and stop for genuinely ambiguous or contradictory variants.
+
+## Workflow mode
+
+Set the mode once at intake and hold it constant for the entire run.
+
+| Mode | Intent |
+|---|---|
+| `balanced` | Default. Each agent uses its own frontmatter model — no override. |
+| `lite` | Cost-efficient. Builders on sonnet, reviewers on haiku. |
+| `ultra` | Highest fidelity. Builders on opus, reviewers on sonnet. |
+
+Model assignments per mode:
+
+| Agent | balanced | lite | ultra |
+|---|---|---|---|
+| figma-extractor | *(frontmatter: sonnet)* | sonnet | opus |
+| page-builder | *(frontmatter: opus)* | sonnet | opus |
+| repair-builder | *(frontmatter: sonnet)* | sonnet | opus |
+| ui-reviewer | *(frontmatter: sonnet)* | haiku | sonnet |
+| accessibility-reviewer | *(frontmatter: haiku)* | haiku | sonnet |
+| content-reviewer | *(frontmatter: haiku)* | haiku | sonnet |
+| technical-reviewer | *(frontmatter: haiku)* | haiku | sonnet |
+| release-verifier | *(frontmatter: haiku)* | haiku | sonnet |
+
+**Mechanism:** for `balanced`, call each agent without a `model` parameter so
+the frontmatter default applies. For `lite` or `ultra`, pass the corresponding
+short alias (`"sonnet"`, `"haiku"`, or `"opus"`) as the `model` parameter on
+every Agent tool invocation for that agent.
 
 ## Non-negotiable boundaries
 

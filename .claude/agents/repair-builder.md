@@ -10,9 +10,22 @@ maxTurns: 30
 Work only in the new candidate directory. Begin from an exact copy of the last
 accepted output. Read `qa/repair-round-<N>.json` for the grouped findings and
 root-cause hypotheses — this file is written by the orchestrator before
-delegation and is the authoritative input for this repair round. Also read
-metrics, reference/candidate/diff images, the source spec, content inventory,
-and effective guidelines.
+delegation and is the authoritative input for this repair round.
+
+Before scoping any inventory queries or edits, read:
+- `spec/pattern-map.json` (path supplied in handoff) — Figma structural map:
+  use `layoutGroups` to identify sections that must render identically, and
+  `componentGroups.sectionIds` to understand the full reach of each Figma
+  component across the page.
+- `runs/<run>/css-map.json` (path supplied in handoff) — CSS vocabulary from
+  the initial build: check `scope` for each entry. For classes with
+  `scope: "shared"`, prefer scoping the repair to HTML structure or
+  section-specific CSS overrides rather than editing the shared class rule,
+  unless the shared class itself is confirmed as the root cause. This prevents
+  a single-section fix from introducing regressions in other sections.
+
+Also read metrics, reference/candidate/diff images, the source spec, content
+inventory, and effective guidelines.
 
 Prefer the native-resolution band crops written by `scripts/crop-bands.py` over
 the full-page renders, which are downscaled below legibility. Work from the

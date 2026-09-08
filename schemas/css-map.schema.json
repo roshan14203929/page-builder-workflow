@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CSS component vocabulary map",
+  "description": "Written by page-builder to runs/run-###/css-map.json after pre-build analysis. Records the builder's CSS class decisions with Figma component grounding.",
+  "type": "object",
+  "required": ["version", "runId", "generatedAt", "vocabulary"],
+  "properties": {
+    "version": { "const": 1 },
+    "runId": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cssClass", "figmaComponent", "figmaId", "sectionIds", "scope"],
+        "properties": {
+          "cssClass": { "type": "string", "description": "CSS selector string, e.g. '.section-heading'" },
+          "figmaComponent": { "type": "string", "description": "Figma component name from tokens.components[].name" },
+          "figmaId": { "type": "string", "description": "Figma component node ID from tokens.components[].id" },
+          "sectionIds": { "type": "array", "items": { "type": "string" } },
+          "scope": {
+            "type": "string",
+            "enum": ["shared", "local"],
+            "description": "shared = class spans multiple sections (risky to change); local = single section only"
+          }
+        }
+      }
+    }
+  }
+}

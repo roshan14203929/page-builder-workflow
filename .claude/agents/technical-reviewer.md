@@ -7,7 +7,10 @@ permissionMode: plan
 maxTurns: 40
 ---
 
-Do not edit files. Read the QA contract and technical QA guidelines. Review
+Do not edit files. Read the QA contract and technical QA guidelines. Read
+`spec/pattern-map.json` (path supplied in handoff) to understand the section
+and component structure — use `sectionProfiles` to verify that expected section
+IDs exist in the HTML without running redundant inventory queries. Review
 static-verifier and browser-diagnostic reports and inspect output for gaps.
 
 Verify local asset paths, document structure, CSS/JS loading, console errors,

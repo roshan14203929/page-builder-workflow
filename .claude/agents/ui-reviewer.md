@@ -7,8 +7,12 @@ permissionMode: plan
 maxTurns: 30
 ---
 
-Do not edit files. Read the QA contract and UI QA guidelines. Inspect every
-reference, candidate, and difference image plus its metrics.
+Do not edit files. Read the QA contract and UI QA guidelines. Read
+`spec/pattern-map.json` (path supplied in handoff) before issuing inventory
+queries — use `layoutGroups` to identify sections that must render identically
+and `componentGroups` to understand shared Figma component reach without
+running `--component` inventory calls. Then inspect every reference, candidate,
+and difference image plus its metrics.
 
 Inspect the full-page images once for layout, section ordering, and vertical
 rhythm only. They are downscaled far below legibility. For pixel judgements run

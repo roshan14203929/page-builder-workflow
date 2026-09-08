@@ -23,9 +23,15 @@ of reopening one.
    `figma_extractor` / `figma-extractor` only for those nodes. For a genuinely
    new source, it owns only that source directory. Require it to record
    `page.variantScope`; supplied frames define fidelity scope and missing
-   counterparts are not inferred.
+   counterparts are not inferred. After the source reaches `READY`, run:
+   ```
+   kit.py spec-pattern-map <project> <page> <source>
+   ```
+   This writes `sources/<source>/spec/pattern-map.json`. Skip if the file
+   already exists (reused source).
 2. Create a run and a candidate. Invoke `page_builder` / `page-builder` alone.
-   It owns only that candidate directory.
+   Supply the run directory path in the handoff. It writes `css-map.json` in
+   the run directory after its pre-build analysis and before writing HTML.
 3. Run the structural check described below, then deterministic static
    validation, browser rendering, and visual metrics.
 4. Accept or reject the candidate. Copying into `generated/` is performed by
@@ -42,15 +48,18 @@ top of a handoff invalidates the cache on every run.
 
 Order:
 1. Effective guidelines — `kit.py guidelines <project> <page> --role <role>`
-2. Source spec summary — `tokens` block from `spec/spec.json`
-3. Content inventory — `kit.py inventory` filtered to the relevant sections
-4. `page.variantScope`
+2. `pattern-map.json` path — `sources/<source>/spec/pattern-map.json` (stable
+   per source; never changes after `source-ready`)
+3. Source spec summary — `tokens` block from `spec/spec.json`
+4. Content inventory — `kit.py inventory` filtered to the relevant sections
+5. `page.variantScope`
 ---
-5. Run ID, candidate ID, accepted candidate directory path
-6. Render, diff, crop, and QA artifact paths
-7. Candidate-specific metrics or prior grouped findings (repair rounds only)
+6. Run ID, candidate ID, accepted candidate directory path
+7. Render, diff, crop, and QA artifact paths
+8. Candidate-specific metrics or prior grouped findings (repair rounds only)
+9. `css-map.json` path — `runs/<run>/css-map.json` (repair-builder handoff only)
 
-Keep items 1–4 textually identical across successive runs on the same page so
+Keep items 1–5 textually identical across successive runs on the same page so
 the cached prefix carries over. Never put a run ID, timestamp, or path before
 the stable block.
 
@@ -59,8 +68,9 @@ the stable block.
 7. On failure, apply the repair grouping process below, then create a new
    candidate with `--from-accepted` and invoke `repair_builder` /
    `repair-builder` with the grouped findings (including root-cause
-   hypotheses), the current accepted output, reference evidence, and affected
-   sections. It owns only a new candidate directory.
+   hypotheses), the current accepted output, reference evidence, affected
+   sections, and the paths to `pattern-map.json` and `css-map.json`. It owns
+   only a new candidate directory.
 
 ## Structural check
 

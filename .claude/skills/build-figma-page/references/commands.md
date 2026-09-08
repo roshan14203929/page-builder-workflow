@@ -13,6 +13,7 @@ python scripts/kit.py source-call <project> <page> <source> --operation <name> -
 python scripts/kit.py source-patch <project> <page> <source> --file <patch.json>
 python scripts/kit.py resolve-question <project> <page> <source> --question <id> --decision "<user decision>" --by user
 python scripts/kit.py source-ready <project> <page> <source>
+python scripts/kit.py spec-pattern-map <project> <page> <source>
 python scripts/kit.py spec-compact <project> <page> <source>
 python scripts/kit.py inventory <project> <page> <source> --sections
 python scripts/kit.py inventory <project> <page> <source> --tree [--section <id>] [--variant <label>] [--kind <kind>] [--component <name>] [--fields id,kind,text|all]
@@ -80,6 +81,14 @@ downscaled too far to read.
 losslessly and reports the byte change; `spec-compact` applies the same
 normalization on demand. Prefer `inventory` slices over reading
 `spec/content-inventory.json` in full, and never read `raw/figma-*.json`.
+
+`spec-pattern-map` derives `sources/<source>/spec/pattern-map.json` from
+`spec.json`: `componentGroups` (Figma component → section IDs, instance count),
+`sectionProfiles` (role, component list, layout summary, background per section),
+and `layoutGroups` (sections that share an identical component set). Run it once
+after `source-ready`; skip if the file already exists on a reused source. This
+file is passed as a stable-prefix path to every agent handoff so they can orient
+without issuing `--component` inventory calls.
 
 `inventory --tree` returns content as `sections → groups → items`, mirroring the
 expected DOM hierarchy. Groups come from `spec.sections[].groups`, which the

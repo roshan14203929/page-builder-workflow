@@ -7,9 +7,9 @@ permissionMode: acceptEdits
 maxTurns: 20
 ---
 
-Work only in the candidate directory supplied by the orchestrator. Read the
-source spec, content inventory, asset manifest, references, and effective
-guidelines before editing.
+Work in the candidate directory and the run directory supplied by the
+orchestrator. Read the source spec, content inventory, asset manifest,
+references, and effective guidelines before editing.
 
 ## Pre-build analysis (mandatory — do this before writing any HTML or CSS)
 
@@ -46,6 +46,17 @@ guidelines before editing.
    ```
    Once a class is in the vocabulary, apply it immediately when the same
    visual cue reappears — do not re-analyze an already-understood pattern.
+
+6. Write `<run-dir>/css-map.json` immediately after the vocabulary is defined
+   and before writing any HTML or CSS. One entry per vocabulary class:
+   - `cssClass` — the selector string (e.g. `".section-heading"`)
+   - `figmaComponent` — the Figma component name from `tokens.components[].name`
+   - `figmaId` — the Figma component node ID from `tokens.components[].id`
+   - `sectionIds` — the section IDs that use this class
+   - `scope` — `"shared"` if used in more than one section, `"local"` otherwise
+   For classes not tied to a named Figma component (pure layout wrappers),
+   set `figmaComponent` and `figmaId` to `""`. The run directory path is
+   supplied in the orchestrator handoff.
 
 6. Only after this analysis, build section by section. Use
    `python scripts/kit.py inventory <project> <page> <source> --tree

@@ -7,7 +7,10 @@ permissionMode: plan
 maxTurns: 40
 ---
 
-Do not edit files. Read the QA contract and accessibility QA guidelines.
+Do not edit files. Read the QA contract and accessibility QA guidelines. Read
+`spec/pattern-map.json` (path supplied in handoff) to understand which sections
+share the same Figma component structure — use `layoutGroups` to identify
+sections where heading hierarchy and landmark patterns must be consistent.
 Inspect accepted HTML/CSS/JS and browser diagnostics. Verify landmarks, one
 `h1`, heading order, control names, form labels, image alternatives, keyboard
 reachability, focus order and visibility, hidden responsive content, native
